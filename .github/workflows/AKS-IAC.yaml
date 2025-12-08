@@ -56,4 +56,4 @@ jobs:
           ARM_USE_AZURECLI_AUTH: "true"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          terraform apply -var="azure_storage_account_access_key=${{ secrets.AZURE_STORAGE_TFSTATE_KEY }}" -auto-approve -out=tfplan -input=false
+          terraform apply -var="azure_storage_account_access_key=${{ secrets.AZURE_STORAGE_TFSTATE_KEY }}" -auto-approve -input=false
