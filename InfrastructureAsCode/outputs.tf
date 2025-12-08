@@ -9,8 +9,7 @@ output "aks_name" {
 }
 
 output "kube_config" {
-  description = "Kubeconfig for the cluster (user)
-  "
+  description = "Kubeconfig for the cluster (user)"
   value     = azurerm_kubernetes_cluster.aks.kube_config_raw
   sensitive = true
 }
