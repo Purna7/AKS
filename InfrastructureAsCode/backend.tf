@@ -16,5 +16,6 @@ terraform {
         storage_account_name = "kloudsavvyinfraterraform"
         container_name       = "terraformbackend"
         key                  = "aks.terraform.tfstate"
+        access_key           = var.azure_storage_account_access_key
     }
 }

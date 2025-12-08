@@ -88,4 +88,11 @@ variable "identity_name" {
 	default     = "aks-uai"
 }
 
+variable "azure_storage_account_access_key" {
+	description = "Storage account access key for Terraform remote state (sensitive). Prefer passing via CI secret or -backend-config at init."
+	type        = string
+	sensitive   = true
+	default     = ""
+}
+
 
