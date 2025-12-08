@@ -59,7 +59,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
 		name           = "default"
 		node_count     = var.agent_count
 		vm_size        = var.agent_vm_size
-		os_type        = "Linux"
 		vnet_subnet_id = azurerm_subnet.aks_subnet.id
 	}
 
@@ -76,15 +75,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
 		}
 	}
 
-	role_based_access_control {
-		enabled = true
-	}
+	role_based_access_control_enabled = true
 
 	network_profile {
 		network_plugin    = "azure"
 		service_cidr      = "10.2.0.0/24"
 		dns_service_ip    = "10.2.0.10"
-		docker_bridge_cidr = "172.17.0.1/16"
 	}
 
 	tags = var.tags
