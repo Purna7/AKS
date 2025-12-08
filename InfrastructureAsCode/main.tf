@@ -42,10 +42,9 @@ resource "azurerm_user_assigned_identity" "aks_identity" {
 
 // Grant Network Contributor on the subnet to the AKS managed identity
 resource "azurerm_role_assignment" "aks_subnet_network_contributor" {
-	scope                = azurerm_subnet.aks_subnet.id
+	scope              = azurerm_subnet.aks_subnet.id
 	role_definition_name = "Network Contributor"
-	principal_id         = azurerm_user_assigned_identity.aks_identity.principal_id
-	name                 = guid(azurerm_subnet.aks_subnet.id, azurerm_user_assigned_identity.aks_identity.principal_id)
+	principal_id       = azurerm_user_assigned_identity.aks_identity.principal_id
 }
 
 // AKS cluster using the user-assigned identity and Azure CNI on the subnet
