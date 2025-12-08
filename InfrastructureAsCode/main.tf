@@ -66,14 +66,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
 		identity_ids = [azurerm_user_assigned_identity.aks_identity.id]
 	}
 
-	linux_profile {
-		admin_username = var.ssh_admin_username
-
-		ssh_key {
-			key_data = file(pathexpand(var.ssh_public_key_path))
-		}
-	}
-
 	role_based_access_control_enabled = true
 
 	network_profile {
