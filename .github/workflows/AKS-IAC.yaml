@@ -34,7 +34,7 @@ jobs:
         run: az account show
 
       - name: Terraform Init
-        working-directory: ./AKS/InfrastructureAsCode
+        working-directory: ./InfrastructureAsCode
         env:
           ARM_USE_AZURECLI_AUTH: "true"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -42,7 +42,7 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Plan
-        working-directory: ./AKS/InfrastructureAsCode
+        working-directory: ./InfrastructureAsCode
         env:
           ARM_USE_AZURECLI_AUTH: "true"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -51,7 +51,7 @@ jobs:
 
       - name: Terraform Apply (only on main or manual)
         if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-        working-directory: ./AKS/InfrastructureAsCode
+        working-directory: ./InfrastructureAsCode
         env:
           ARM_USE_AZURECLI_AUTH: "true"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
