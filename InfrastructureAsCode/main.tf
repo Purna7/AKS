@@ -19,18 +19,6 @@ resource "azurerm_subnet" "aks_subnet" {
 	resource_group_name  = azurerm_resource_group.aks_rg.name
 	virtual_network_name = azurerm_virtual_network.aks_vnet.name
 	address_prefixes     = [var.subnet_prefix]
-
-	delegation {
-		name = "aks_delegation"
-
-		service_delegation {
-			name = "Microsoft.ContainerService/managedClusters"
-
-			actions = [
-				"Microsoft.Network/virtualNetworks/subnets/join/action",
-			]
-		}
-	}
 }
 
 // User-assigned managed identity for AKS (so we can pre-assign subnet permissions)
