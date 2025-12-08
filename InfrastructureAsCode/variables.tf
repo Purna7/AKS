@@ -25,7 +25,7 @@ variable "dns_prefix" {
 variable "agent_count" {
 	description = "Number of nodes in the default node pool"
 	type        = number
-	default     = 2
+	default     = 1
 }
 
 variable "agent_vm_size" {
