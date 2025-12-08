@@ -31,7 +31,7 @@ variable "agent_count" {
 variable "agent_vm_size" {
 	description = "VM size for AKS nodes"
 	type        = string
-	default     = "standard_dc16as_v5,standard_dc16ds_v3"
+	default     = "standard_dc16ads_cc_v5"
 }
 
 variable "ssh_admin_username" {
