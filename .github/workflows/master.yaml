@@ -6,15 +6,15 @@ on:
 jobs:
   aks_iac:
     name: AKS Infrastructure
-    uses: Purna7/AKS/.github/workflows/AKS-IAC.yaml@clean-main
+    uses: ./.github/workflows/AKS-IAC.yaml
     needs: checkout
 
   dotnet_ci:
     name: Dotnet Application CI
-    uses: Purna7/AKS/.github/workflows/DotnetApplication-CI.yaml@clean-main
+    uses: ./.github/workflows/DotnetApplication-CI.yaml
     needs: aks_iac
 
   dotnet_cd:
     name: Dotnet Application CD
-    uses: Purna7/AKS/.github/workflows/DotnetApplication-CD.yaml@clean-main
+    uses: ./.github/workflows/DotnetApplication-CD.yaml
     needs: dotnet_ci
