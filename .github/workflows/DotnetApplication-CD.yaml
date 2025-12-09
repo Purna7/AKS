@@ -1,0 +1,11 @@
+name: Dotnet Application CD
+
+on:
+  workflow_call:
+
+jobs:
+  echo_message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo CD Message
+        run: echo "Dotnet Application CD pipeline triggered!"
