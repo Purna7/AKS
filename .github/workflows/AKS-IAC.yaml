@@ -24,15 +24,12 @@ jobs:
         with:
           terraform_version: "1.5.7"
 
-      - name: Azure Login (OIDC)
-        uses: azure/login@v1
+      - name: Azure OIDC Login
+        uses: ./.github/actions/azure-oidc-login
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Verify Azure Login
-        run: az account show
 
       - name: Terraform Init
         working-directory: ./InfrastructureAsCode
