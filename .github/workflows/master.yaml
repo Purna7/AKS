@@ -7,7 +7,6 @@ jobs:
   aks_iac:
     name: AKS Infrastructure
     uses: ./.github/workflows/AKS-IAC.yaml
-    needs: checkout
 
   dotnet_ci:
     name: Dotnet Application CI
