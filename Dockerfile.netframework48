@@ -1,0 +1,68 @@
+# Dockerfile for .NET Framework 4.8 Application
+# Note: This uses Windows containers which require Windows nodes in AKS
+# For production AKS, consider migrating to .NET 6+ (cross-platform, Linux support)
+
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS builder
+
+# Install .NET Framework 4.8 SDK
+RUN powershell -Command \
+    $ProgressPreference = 'SilentlyContinue'; \
+    Invoke-WebRequest -Uri 'https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4671-91EC-8a62D5EA5CF1/NDP48-TargetingPack-ENU.exe' -OutFile 'NDP48-TargetingPack.exe'; \
+    .\NDP48-TargetingPack.exe /q /norestart; \
+    Remove-Item 'NDP48-TargetingPack.exe' -Force
+
+WORKDIR /src
+
+# Copy project files
+COPY ["YourApp.csproj", "./"]
+COPY ["packages.config", "./"]
+
+# Restore NuGet packages
+RUN powershell -Command \
+    $ProgressPreference = 'SilentlyContinue'; \
+    Invoke-WebRequest -Uri 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -OutFile 'nuget.exe'; \
+    .\nuget.exe restore .\packages.config -OutputDirectory packages; \
+    Remove-Item 'nuget.exe' -Force
+
+# Copy source code
+COPY . .
+
+# Build application
+RUN powershell -Command \
+    $msbuildPath = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe'; \
+    & $msbuildPath YourApp.csproj /p:Configuration=Release /p:Platform=AnyCPU
+
+# Runtime stage
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+# Install .NET Framework 4.8 Runtime
+RUN powershell -Command \
+    $ProgressPreference = 'SilentlyContinue'; \
+    Invoke-WebRequest -Uri 'https://download.microsoft.com/download/0/7/C/07C8662F-BDCB-4C3D-A674-12C6CEF35AC6/ndp48-x86-x64-allos-enu.exe' -OutFile 'ndp48-runtime.exe'; \
+    .\ndp48-runtime.exe /q /norestart; \
+    Remove-Item 'ndp48-runtime.exe' -Force
+
+# Install IIS and required components
+RUN powershell -Command \
+    Install-WindowsFeature Web-Server, Web-Asp-Net45, Web-Mgmt-Tools -IncludeAllSubFeature
+
+WORKDIR /app
+
+# Copy built application from builder
+COPY --from=builder /src/bin/Release .
+
+# Configure IIS
+RUN powershell -Command \
+    Import-Module WebAdministration; \
+    New-Website -Name "YourApp" -PhysicalPath "C:\app" -Port 8080 -Force; \
+    Set-ItemProperty -Path "IIS:\AppPools\DefaultAppPool" -Name "managedRuntimeVersion" -Value "v4.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD powershell -Command try { Invoke-WebRequest -Uri "http://localhost:8080/health" -UseBasicParsing } catch { exit 1 }
+
+# Expose port
+EXPOSE 8080
+
+# Start application (IIS will handle .NET app)
+CMD ["powershell", "-Command", "Start-Service W3SVC; Write-Host 'IIS started'; while ($true) { Start-Sleep -Seconds 3600 }"]
