@@ -1,0 +1,29 @@
+name: Azure OIDC Login
+description: Authenticate to Azure using GitHub OIDC and OpenID Connect
+
+inputs:
+  client-id:
+    description: Azure app (client) ID
+    required: true
+  tenant-id:
+    description: Azure tenant ID
+    required: true
+  subscription-id:
+    description: Azure subscription ID
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Azure Login (OIDC)
+      uses: azure/login@v1
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+
+    - name: Verify Azure Login
+      shell: bash
+      run: |
+        echo "Azure login successful"
+        az account show
