@@ -1,0 +1,94 @@
+name: Azure Services Inventory
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM UTC
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  fetch-azure-services:
+    name: Fetch Azure Services
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure OIDC Login
+        uses: ./.github/actions/azure-oidc-login
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Fetch Resource Groups
+        run: |
+          echo "=== Resource Groups ==="
+          az group list --query "[].{Name:name, Location:location, CreatedTime:tags.createdTime}" -o table
+
+      - name: Fetch All Resources
+        run: |
+          echo "=== All Resources in Subscription ==="
+          az resource list --query "[].{Name:name, Type:type, ResourceGroup:resourceGroup, Location:location}" -o table
+
+      - name: Fetch Virtual Networks
+        run: |
+          echo "=== Virtual Networks ==="
+          az network vnet list --query "[].{Name:name, ResourceGroup:resourceGroup, AddressSpace:addressSpace.addressPrefixes}" -o table
+
+      - name: Fetch Kubernetes Clusters
+        run: |
+          echo "=== AKS Clusters ==="
+          az aks list --query "[].{Name:name, ResourceGroup:resourceGroup, KubernetesVersion:kubernetesVersion, Location:location}" -o table
+
+      - name: Fetch Storage Accounts
+        run: |
+          echo "=== Storage Accounts ==="
+          az storage account list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location, Kind:kind}" -o table
+
+      - name: Fetch Key Vaults
+        run: |
+          echo "=== Key Vaults ==="
+          az keyvault list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table
+
+      - name: Fetch App Services
+        run: |
+          echo "=== App Services ==="
+          az appservice list --query "[].{Name:name, ResourceGroup:resourceGroup, State:state, Runtime:runtimeVersion}" -o table
+
+      - name: Fetch Container Registries
+        run: |
+          echo "=== Container Registries ==="
+          az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location, SkuName:sku.name}" -o table
+
+      - name: Fetch Databases
+        run: |
+          echo "=== SQL Databases ==="
+          az sql db list --query "[].{Name:name, ResourceGroup:resourceGroup, Server:resourceName}" -o table 2>/dev/null || echo "No SQL databases found"
+
+      - name: Fetch Managed Identities
+        run: |
+          echo "=== Managed Identities ==="
+          az identity list --query "[].{Name:name, ResourceGroup:resourceGroup, ClientId:clientId, PrincipalId:principalId}" -o table
+
+      - name: Generate Service Inventory Report
+        run: |
+          echo "=== Azure Services Inventory Report ===" > azure-services-inventory.txt
+          echo "Generated: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> azure-services-inventory.txt
+          echo "Subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> azure-services-inventory.txt
+          echo "" >> azure-services-inventory.txt
+          
+          echo "Resource Summary:" >> azure-services-inventory.txt
+          az resource list --query "length(@)" -o tsv >> azure-services-inventory.txt
+          echo "total resources" >> azure-services-inventory.txt
+
+      - name: Upload Inventory Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: azure-services-inventory
+          path: azure-services-inventory.txt
+          retention-days: 30
