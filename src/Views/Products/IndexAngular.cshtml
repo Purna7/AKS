@@ -1,0 +1,92 @@
+@model IEnumerable<ECommerceApp.Models.Product>
+@{
+    ViewBag.Title = "Products";
+}
+
+<div ng-controller="ProductsController" class="fade-in">
+    <div class="page-header">
+        <h1>Our Products</h1>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" 
+               ng-model="searchQuery" 
+               class="search-input" 
+               placeholder="Search products by name or category...">
+    </div>
+
+    <!-- Loading Spinner -->
+    <loading-spinner ng-show="loading"></loading-spinner>
+
+    <!-- Filters -->
+    <div class="filters" ng-hide="loading">
+        <div class="filter-group">
+            <strong>Filter by Category:</strong>
+            <button class="filter-btn" 
+                    ng-class="{'active': selectedCategory === null}"
+                    ng-click="filterByCategory(null)">
+                All Products
+            </button>
+            @foreach (var category in ViewBag.Categories)
+            {
+                <button class="filter-btn" 
+                        ng-class="{'active': selectedCategory === '@category'}"
+                        ng-click="filterByCategory('@category')">
+                    @category
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="product-grid" ng-hide="loading">
+        @foreach (var product in Model)
+        {
+            <div class="product-card hover-scale ng-enter">
+                <div class="product-image">[Product Image]</div>
+                <h3>@product.Name</h3>
+                <p class="category">@product.Category</p>
+                <p class="price">${{@product.Price | number:2}}</p>
+                <p class="stock">
+                    @if (product.InStock)
+                    {
+                        <span class="text-success">In Stock</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Out of Stock</span>
+                    }
+                </p>
+                <div class="product-actions">
+                    <a href="@Url.Action("Details", new { id = product.Id })" class="btn btn-secondary btn-sm">
+                        View Details
+                    </a>
+                    @if (product.InStock)
+                    {
+                        <button class="btn btn-primary btn-sm" 
+                                ng-click="addToCart(@product.Id, 1)">
+                            Add to Cart
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- No Results -->
+    <div class="empty-state" ng-show="!loading && filteredProducts().length === 0">
+        <h2>No products found</h2>
+        <p>Try adjusting your filters or search query</p>
+    </div>
+</div>
+
+<script>
+    // Initialize AngularJS data
+    var app = angular.module('kloudkartApp');
+    app.run(['$rootScope', function($rootScope) {
+        $rootScope.products = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        $rootScope.categories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Categories));
+    }]);
+</script>

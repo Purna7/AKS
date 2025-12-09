@@ -1,0 +1,53 @@
+@model List<ECommerceApp.Models.Product>
+@{
+    ViewBag.Title = "Products";
+}
+
+<div class="page-header">
+    <h1>Our Products</h1>
+</div>
+
+<div class="filters">
+    <div class="filter-group">
+        <label>Filter by Category:</label>
+        <a href="@Url.Action("Index")" class="filter-btn @(string.IsNullOrEmpty(ViewBag.SelectedCategory) ? "active" : "")">All</a>
+        @foreach (var category in ViewBag.Categories)
+        {
+            <a href="@Url.Action("Index", new { category })" 
+               class="filter-btn @(ViewBag.SelectedCategory == category ? "active" : "")">@category</a>
+        }
+    </div>
+</div>
+
+<div class="product-grid">
+    @foreach (var product in Model)
+    {
+        <div class="product-card">
+            <div class="product-image">[Product Image]</div>
+            <h3>@product.Name</h3>
+            <p class="category">@product.Category</p>
+            <p class="price">$@product.Price.ToString("F2")</p>
+            <p class="stock">@(product.InStock ? "In Stock" : "Out of Stock")</p>
+            <div class="product-actions">
+                <a href="@Url.Action("Details", new { id = product.Id })" class="btn btn-secondary btn-sm">View Details</a>
+                @if (product.InStock)
+                {
+                    using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post, new { style = "display:inline" }))
+                    {
+                        @Html.Hidden("productId", product.Id)
+                        @Html.Hidden("quantity", 1)
+                        <button type="submit" class="btn btn-primary btn-sm">Add to Cart</button>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-state">
+        <p>No products found in this category.</p>
+        <a href="@Url.Action("Index")" class="btn btn-primary">View All Products</a>
+    </div>
+}

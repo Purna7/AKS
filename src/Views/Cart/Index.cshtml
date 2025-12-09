@@ -1,0 +1,73 @@
+@model List<ECommerceApp.Models.CartItem>
+@{
+    ViewBag.Title = "Shopping Cart";
+    var total = Model.Sum(i => i.Subtotal);
+}
+
+<div class="page-header">
+    <h1>Shopping Cart</h1>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-state">
+        <h2>Your cart is empty</h2>
+        <p>Start adding some products!</p>
+        <a href="@Url.Action("Index", "Products")" class="btn btn-primary">Continue Shopping</a>
+    </div>
+}
+else
+{
+    <div class="cart-container">
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@item.Product.Name</strong><br />
+                            <small>@item.Product.Category</small>
+                        </td>
+                        <td>$@item.Product.Price.ToString("F2")</td>
+                        <td>
+                            @using (Html.BeginForm("UpdateQuantity", "Cart", FormMethod.Post, new { style = "display:inline" }))
+                            {
+                                @Html.Hidden("productId", item.Product.Id)
+                                <input type="number" name="quantity" value="@item.Quantity" min="0" max="10" class="quantity-input" />
+                                <button type="submit" class="btn btn-sm btn-secondary">Update</button>
+                            }
+                        </td>
+                        <td><strong>$@item.Subtotal.ToString("F2")</strong></td>
+                        <td>
+                            @using (Html.BeginForm("RemoveFromCart", "Cart", FormMethod.Post))
+                            {
+                                @Html.Hidden("productId", item.Product.Id)
+                                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                    <td colspan="2"><strong class="total-price">$@total.ToString("F2")</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="cart-actions">
+            <a href="@Url.Action("Index", "Products")" class="btn btn-secondary">Continue Shopping</a>
+            <a href="@Url.Action("Index", "Checkout")" class="btn btn-primary btn-lg">Proceed to Checkout</a>
+        </div>
+    </div>
+}

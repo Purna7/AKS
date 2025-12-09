@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html ng-app="kloudkartApp">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Kloudkart</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="container nav-container">
+                <div class="nav-brand">
+                    <a href="@Url.Action("Index", "Home")" class="brand-logo">
+                        <span class="brand-icon">K</span>
+                        <span class="brand-name">Kloudkart</span>
+                    </a>
+                </div>
+                <div class="nav-center">
+                    <a href="@Url.Action("Index", "Home")" class="nav-item">
+                        <span class="nav-icon">&#127968;</span>
+                        <span class="nav-text">Home</span>
+                    </a>
+                    <a href="@Url.Action("Index", "Products")" class="nav-item">
+                        <span class="nav-icon">&#128230;</span>
+                        <span class="nav-text">Products</span>
+                    </a>
+                    <a href="@Url.Action("Index", "Admin")" class="nav-item nav-admin">
+                        <span class="nav-icon">&#9881;</span>
+                        <span class="nav-text">Admin</span>
+                    </a>
+                </div>
+                <div class="nav-right">
+                    <a href="@Url.Action("Index", "Cart")" class="cart-button">
+                        <span class="cart-icon">&#128722;</span>
+                        <span class="cart-label">Cart</span>
+                        <span id="cart-count" class="cart-badge">0</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-info">
+                @TempData["Message"]
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <span class="footer-logo">K</span>
+                <span class="footer-name">Kloudkart</span>
+            </div>
+            <div class="footer-text">
+                <p>&copy; @DateTime.Now.Year Kloudkart. All rights reserved.</p>
+                <p class="footer-tagline">Your trusted online marketplace</p>
+            </div>
+    </footer>
+
+    <script src="~/Scripts/site.js"></script>
+    <script src="~/Scripts/app.js"></script>
+</body>
+</html>
+</html>
