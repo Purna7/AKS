@@ -10,7 +10,7 @@ jobs:
 
   dotnet_ci:
     name: Dotnet Application CI
-    uses: ./.github/workflows/DotnetApplication-CI.yaml
+    uses: ./.github/workflows/DotnetApplicaiton-CI.yaml
     needs: aks_iac
 
   dotnet_cd:
