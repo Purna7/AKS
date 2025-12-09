@@ -58,7 +58,7 @@ jobs:
       - name: Fetch App Services
         run: |
           echo "=== App Services ==="
-          az appservice list --query "[].{Name:name, ResourceGroup:resourceGroup, State:state, Runtime:runtimeVersion}" -o table
+          az webapp list --query "[].{Name:name, ResourceGroup:resourceGroup, State:state, DefaultHostName:defaultHostName}" -o table 2>/dev/null || echo "No App Services found"
 
       - name: Fetch Container Registries
         run: |
@@ -67,13 +67,13 @@ jobs:
 
       - name: Fetch Databases
         run: |
-          echo "=== SQL Databases ==="
-          az sql db list --query "[].{Name:name, ResourceGroup:resourceGroup, Server:resourceName}" -o table 2>/dev/null || echo "No SQL databases found"
+          echo "=== SQL Servers ==="
+          az sql server list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table 2>/dev/null || echo "No SQL servers found"
 
       - name: Fetch Managed Identities
         run: |
           echo "=== Managed Identities ==="
-          az identity list --query "[].{Name:name, ResourceGroup:resourceGroup, ClientId:clientId, PrincipalId:principalId}" -o table
+          az identity list --query "[].{Name:name, ResourceGroup:resourceGroup, ClientId:clientId, PrincipalId:principalId}" -o table 2>/dev/null || echo "No managed identities found"
 
       - name: Generate Service Inventory Report
         run: |
