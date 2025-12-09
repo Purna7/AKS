@@ -1,0 +1,205 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Donor Report";
+}
+
+<div class="mb-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>📊 Donor Report</h1>
+            <p class="lead">Recognizing our generous donors and their contributions</p>
+        </div>
+        <a asp-action="Index" class="btn btn-ryl-primary">← Back to Donations</a>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card card-ryl card-ryl-primary hover-lift">
+            <div class="card-body text-center">
+                <div class="quick-stat-icon">🤝</div>
+                <h2 class="display-5">@ViewBag.TotalDonors</h2>
+                <p class="mb-0">Total Donors</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-ryl card-ryl-warning hover-lift">
+            <div class="card-body text-center">
+                <div class="quick-stat-icon">📚</div>
+                <h2 class="display-5">@ViewBag.TotalBooksDonated</h2>
+                <p class="mb-0">Total Books Donated</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-ryl card-ryl-success hover-lift">
+            <div class="card-body text-center">
+                <div class="quick-stat-icon">✅</div>
+                <h2 class="display-5">@ViewBag.TotalAcceptedBooks</h2>
+                <p class="mb-0">Books Added to Library</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Box -->
+<div class="card card-ryl mb-4">
+    <div class="card-body">
+        <form asp-action="DonorReport" method="get">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <div class="search-box-ryl">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" name="search" class="form-control form-control-ryl" 
+                               placeholder="Search by donor name or email" value="@Context.Request.Query["search"]">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-ryl-primary w-100">🔎 Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="DonorReport" class="btn btn-outline-secondary w-100">↻ Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Donors List -->
+@if (Model != null && Model.Count > 0)
+{
+    @foreach (var donor in Model)
+    {
+        <div class="card card-ryl hover-lift mb-3" x-data="{ expanded: false }">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h5 class="mb-1">🤝 @donor.DonorName</h5>
+                        <p class="text-muted mb-0">
+                            <small>📧 @donor.DonorEmail</small><br>
+                            <small>📱 @donor.DonorPhone</small>
+                            @if (!string.IsNullOrEmpty(donor.DonorAddress))
+                            {
+                                <br><small>📍 @donor.DonorAddress</small>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h4 class="text-primary mb-0">@donor.TotalDonations</h4>
+                                <small class="text-muted">Donations</small>
+                            </div>
+                            <div class="col-4">
+                                <h4 class="text-warning mb-0">@donor.TotalBooks</h4>
+                                <small class="text-muted">Books</small>
+                            </div>
+                            <div class="col-4">
+                                <h4 class="text-success mb-0">@donor.AcceptedDonations</h4>
+                                <small class="text-muted">Accepted</small>
+                            </div>
+                        </div>
+                        <div class="row text-center mt-2">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    First: @donor.FirstDonation.ToString("MMM dd, yyyy") | 
+                                    Latest: @donor.LastDonation.ToString("MMM dd, yyyy")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-ryl-secondary" @@click="expanded = !expanded">
+                            <span x-show="!expanded">📖 View Details</span>
+                            <span x-show="expanded">▲ Hide</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expanded Details -->
+                <div x-show="expanded" x-transition class="mt-3 pt-3 border-top">
+                    <h6 class="mb-3">📚 Donation History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Book Title</th>
+                                    <th>Author</th>
+                                    <th>Copies</th>
+                                    <th>Condition</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var donation in donor.Donations)
+                                {
+                                    <tr>
+                                        <td>@donation.DonationDate.ToString("MMM dd, yyyy")</td>
+                                        <td><strong>@donation.BookTitle</strong></td>
+                                        <td>@donation.BookAuthor</td>
+                                        <td>@donation.Copies</td>
+                                        <td>
+                                            @if (donation.BookCondition == "Excellent")
+                                            {
+                                                <span class="badge badge-ryl-success">⭐ @donation.BookCondition</span>
+                                            }
+                                            else if (donation.BookCondition == "Good")
+                                            {
+                                                <span class="badge badge-ryl-info">👍 @donation.BookCondition</span>
+                                            }
+                                            else if (donation.BookCondition == "Fair")
+                                            {
+                                                <span class="badge badge-ryl-warning">⚠️ @donation.BookCondition</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-ryl-danger">📉 @donation.BookCondition</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (donation.AcceptanceStatus == "Accepted")
+                                            {
+                                                <span class="badge badge-ryl-success">✅ Accepted</span>
+                                            }
+                                            else if (donation.AcceptanceStatus == "Pending")
+                                            {
+                                                <span class="badge badge-ryl-warning">⏳ Pending</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-ryl-danger">❌ Rejected</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="card card-ryl">
+        <div class="card-body text-center py-5">
+            <div class="mb-3" style="font-size: 4rem;">📭</div>
+            <h4>No Donors Found</h4>
+            <p class="text-muted">There are no donors matching your search criteria.</p>
+            <a asp-action="Create" class="btn btn-ryl-accent mt-3">💝 Make First Donation</a>
+        </div>
+    </div>
+}
+
+<!-- Recognition Section -->
+<div class="card card-ryl mt-4" style="background: linear-gradient(135deg, var(--ryl-primary) 0%, var(--ryl-primary-dark) 100%); color: white;">
+    <div class="card-body text-center py-4">
+        <h3 style="color: white;">💚 Thank You to All Our Donors!</h3>
+        <p class="mb-0">Your generosity makes Rama Yogi Library a better place for everyone in our community.</p>
+        <p class="mb-0"><small>Books donated are recognized in our collection and help foster a love of reading.</small></p>
+    </div>
+</div>

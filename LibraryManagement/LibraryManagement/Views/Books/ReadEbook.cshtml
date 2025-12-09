@@ -1,0 +1,401 @@
+@model LibraryManagement.Models.Book
+
+@{
+    ViewData["Title"] = "Read eBook - " + Model.Title;
+    Layout = null; // Full screen reader without main layout
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RYSS Library</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/rama-yogi-library.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .reader-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .reader-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .reader-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+        
+        .reader-title h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #2c5282;
+            font-weight: 600;
+        }
+        
+        .reader-title small {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .reader-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .reader-controls button,
+        .reader-controls a {
+            padding: 0.5rem 1.5rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .btn-reader-primary {
+            background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%);
+            color: white;
+        }
+        
+        .btn-reader-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 82, 130, 0.3);
+        }
+        
+        .btn-reader-secondary {
+            background: #f7fafc;
+            color: #2c5282;
+            border: 2px solid #2c5282;
+        }
+        
+        .btn-reader-secondary:hover {
+            background: #2c5282;
+            color: white;
+        }
+        
+        .btn-reader-download {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+        }
+        
+        .btn-reader-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        .reader-content {
+            flex: 1;
+            background: white;
+            margin: 1rem;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .reader-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .reader-info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .reader-meta {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .reader-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .reader-meta-item i {
+            color: #2c5282;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2c5282;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .format-pdf {
+            background: #fee;
+            color: #c00;
+        }
+        
+        .format-epub {
+            background: #efe;
+            color: #080;
+        }
+        
+        .unsupported-format {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        
+        .unsupported-format i {
+            font-size: 5rem;
+            color: #d97706;
+            margin-bottom: 1rem;
+        }
+        
+        .unsupported-format h2 {
+            color: #2c5282;
+            margin-bottom: 1rem;
+        }
+        
+        .unsupported-format p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        @@media (max-width: 768px) {
+            .reader-header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .reader-title h1 {
+                font-size: 1.2rem;
+            }
+            
+            .reader-controls {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .reader-info {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .reader-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="reader-container">
+        <!-- Header -->
+        <div class="reader-header">
+            <div class="reader-title">
+                <div>
+                    <h1>
+                        <i class="bi bi-book-half"></i>
+                        @Model.Title
+                    </h1>
+                    <small>by @Model.Author</small>
+                </div>
+                <span class="format-badge format-@Model.FileFormat?.ToLower()">@Model.FileFormat</span>
+            </div>
+            <div class="reader-controls">
+                <a asp-action="DownloadEbook" asp-route-id="@Model.BookId" class="btn-reader-download">
+                    <i class="bi bi-download"></i>
+                    Download
+                </a>
+                <a asp-action="Details" asp-route-id="@Model.BookId" class="btn-reader-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    Details
+                </a>
+                <a asp-action="Index" class="btn-reader-primary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Library
+                </a>
+            </div>
+        </div>
+        
+        <!-- Reader Content -->
+        <div class="reader-content">
+            @if (Model.FileFormat?.ToUpper() == "PDF")
+            {
+                <!-- PDF Reader -->
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem; color: #2c5282; font-weight: 600;">Loading eBook...</p>
+                </div>
+                <iframe 
+                    id="ebookFrame"
+                    class="reader-iframe" 
+                    src="@Model.EbookFileUrl"
+                    onload="document.getElementById('loadingOverlay').style.display='none'">
+                </iframe>
+            }
+            else if (Model.FileFormat?.ToUpper() == "EPUB")
+            {
+                <!-- EPUB would require a dedicated reader library like epub.js -->
+                <div class="unsupported-format">
+                    <i class="bi bi-book"></i>
+                    <h2>EPUB Reader</h2>
+                    <p>EPUB format requires a specialized reader. Please download the file to read on your device.</p>
+                    <div>
+                        <a asp-action="DownloadEbook" asp-route-id="@Model.BookId" class="btn-reader-download" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                            <i class="bi bi-download"></i>
+                            Download EPUB File
+                        </a>
+                    </div>
+                    <p style="margin-top: 2rem; font-size: 0.9rem; color: #999;">
+                        Recommended readers: Adobe Digital Editions, Calibre, Apple Books
+                    </p>
+                </div>
+            }
+            else if (Model.FileFormat?.ToUpper() == "MOBI")
+            {
+                <!-- MOBI is primarily for Kindle -->
+                <div class="unsupported-format">
+                    <i class="bi bi-kindle"></i>
+                    <h2>MOBI Format</h2>
+                    <p>MOBI files are designed for Kindle devices. Please download to read on your Kindle or Kindle app.</p>
+                    <div>
+                        <a asp-action="DownloadEbook" asp-route-id="@Model.BookId" class="btn-reader-download" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                            <i class="bi bi-download"></i>
+                            Download MOBI File
+                        </a>
+                    </div>
+                    <p style="margin-top: 2rem; font-size: 0.9rem; color: #999;">
+                        Best viewed on: Kindle devices and Kindle apps
+                    </p>
+                </div>
+            }
+            else
+            {
+                <!-- Unknown format -->
+                <div class="unsupported-format">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <h2>Unsupported Format</h2>
+                    <p>This eBook format cannot be displayed in the browser. Please download the file.</p>
+                    <div>
+                        <a asp-action="DownloadEbook" asp-route-id="@Model.BookId" class="btn-reader-download" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                            <i class="bi bi-download"></i>
+                            Download eBook
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <!-- Footer Info -->
+        <div class="reader-info">
+            <div class="reader-meta">
+                <div class="reader-meta-item">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>@Model.Pages pages</span>
+                </div>
+                <div class="reader-meta-item">
+                    <i class="bi bi-hdd"></i>
+                    <span>@Model.FileSizeInMB MB</span>
+                </div>
+                <div class="reader-meta-item">
+                    <i class="bi bi-download"></i>
+                    <span>@Model.DownloadCount downloads</span>
+                </div>
+                <div class="reader-meta-item">
+                    <i class="bi bi-calendar"></i>
+                    <span>Published @Model.PublicationYear</span>
+                </div>
+            </div>
+            <div>
+                <span style="font-weight: 600; color: #2c5282;">RYSS Library</span> - Digital Reading Experience
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // ESC to go back
+            if (e.key === 'Escape') {
+                window.location.href = '@Url.Action("Index")';
+            }
+            // Ctrl+D to download
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                window.location.href = '@Url.Action("DownloadEbook", new { id = Model.BookId })';
+            }
+        });
+
+        // Show keyboard shortcuts info on load
+        console.log('%c📚 RYSS Library eBook Reader', 'font-size: 16px; font-weight: bold; color: #2c5282');
+        console.log('%cKeyboard Shortcuts:', 'font-weight: bold; margin-top: 10px');
+        console.log('ESC - Return to library');
+        console.log('Ctrl+D - Download eBook');
+    </script>
+</body>
+</html>

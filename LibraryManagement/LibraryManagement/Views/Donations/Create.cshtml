@@ -1,0 +1,171 @@
+@model LibraryManagement.Models.Donation
+@{
+    ViewData["Title"] = "Donate a Book";
+}
+
+<div class="mb-4 fade-in">
+    <h1>💝 Donate a Book to Rama Yogi Library</h1>
+    <p class="lead">Thank you for considering donating to our library! Your generosity helps us grow our collection.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card card-ryl hover-lift">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <h4 class="mb-3">📝 Donor Information</h4>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DonorName" class="form-label form-label-ryl"></label>
+                            <input asp-for="DonorName" class="form-control form-control-ryl" placeholder="John Doe" />
+                            <span asp-validation-for="DonorName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DonorEmail" class="form-label form-label-ryl"></label>
+                            <input asp-for="DonorEmail" class="form-control form-control-ryl" placeholder="john@example.com" />
+                            <span asp-validation-for="DonorEmail" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DonorPhone" class="form-label form-label-ryl"></label>
+                            <input asp-for="DonorPhone" class="form-control form-control-ryl" placeholder="555-0123" />
+                            <span asp-validation-for="DonorPhone" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DonorAddress" class="form-label form-label-ryl"></label>
+                            <input asp-for="DonorAddress" class="form-control form-control-ryl" placeholder="123 Main St, City, State" />
+                            <span asp-validation-for="DonorAddress" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h4 class="mb-3">📚 Book Information</h4>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="BookTitle" class="form-label form-label-ryl"></label>
+                            <input asp-for="BookTitle" class="form-control form-control-ryl" placeholder="Enter book title" />
+                            <span asp-validation-for="BookTitle" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="BookISBN" class="form-label form-label-ryl"></label>
+                            <input asp-for="BookISBN" class="form-control form-control-ryl" placeholder="978-0-123456-78-9" />
+                            <span asp-validation-for="BookISBN" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="BookAuthor" class="form-label form-label-ryl"></label>
+                            <input asp-for="BookAuthor" class="form-control form-control-ryl" placeholder="Author name" />
+                            <span asp-validation-for="BookAuthor" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="BookPublisher" class="form-label form-label-ryl"></label>
+                            <input asp-for="BookPublisher" class="form-control form-control-ryl" placeholder="Publisher name" />
+                            <span asp-validation-for="BookPublisher" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Category" class="form-label form-label-ryl"></label>
+                            <select asp-for="Category" class="form-select form-control-ryl">
+                                <option value="">-- Select Category --</option>
+                                @foreach (var cat in ViewBag.Categories)
+                                {
+                                    <option value="@cat">@cat</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="PublicationYear" class="form-label form-label-ryl"></label>
+                            <input asp-for="PublicationYear" type="number" class="form-control form-control-ryl" placeholder="2024" min="1900" max="@DateTime.Now.Year" />
+                            <span asp-validation-for="PublicationYear" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Copies" class="form-label form-label-ryl"></label>
+                            <input asp-for="Copies" type="number" class="form-control form-control-ryl" value="1" min="1" max="100" />
+                            <span asp-validation-for="Copies" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="BookCondition" class="form-label form-label-ryl"></label>
+                        <select asp-for="BookCondition" class="form-select form-control-ryl" required>
+                            <option value="">-- Select Condition --</option>
+                            @foreach (var condition in ViewBag.Conditions)
+                            {
+                                <option value="@condition">@condition</option>
+                            }
+                        </select>
+                        <span asp-validation-for="BookCondition" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label form-label-ryl"></label>
+                        <textarea asp-for="Notes" class="form-control form-control-ryl" rows="3" placeholder="Any additional information about the book..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-ryl-accent">💝 Submit Donation</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">✗ Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card card-ryl" style="background: linear-gradient(135deg, var(--ryl-accent) 0%, var(--ryl-accent-light) 100%); color: white;">
+            <div class="card-body">
+                <h5 class="card-title" style="color: white;">📋 Donation Guidelines</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <strong>📖 Accepted Books:</strong><br>
+                        <small>We accept fiction, non-fiction, textbooks, and reference materials in good condition.</small>
+                    </li>
+                    <li class="mb-3">
+                        <strong>✅ Book Condition:</strong><br>
+                        <small>Please honestly assess the condition. Books in poor condition may not be accepted.</small>
+                    </li>
+                    <li class="mb-3">
+                        <strong>⏱️ Processing Time:</strong><br>
+                        <small>We review all donations within 3-5 business days.</small>
+                    </li>
+                    <li class="mb-3">
+                        <strong>📧 Notification:</strong><br>
+                        <small>You'll receive an email once your donation is reviewed.</small>
+                    </li>
+                    <li class="mb-3">
+                        <strong>🎁 Tax Deduction:</strong><br>
+                        <small>Accepted donations may be tax-deductible. Please consult your tax advisor.</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card card-ryl mt-3">
+            <div class="card-body">
+                <h6>💚 Thank You!</h6>
+                <p class="small mb-0">Your generosity helps Rama Yogi Library serve the community better. Every book makes a difference!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

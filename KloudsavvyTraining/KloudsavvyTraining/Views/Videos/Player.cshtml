@@ -7,13 +7,10 @@
 <div class="video-player-page">
     <div class="video-player-container">
         <div class="video-wrapper">
-            <div class="video-placeholder">
-                <div class="video-icon">🎥</div>
-                <h2>@Model.Title</h2>
-                <p>Video player would be embedded here</p>
-                <p class="video-url">Source: @Model.VideoUrl</p>
-                <p class="video-info">Duration: @Model.GetFormattedDuration() | Views: @Model.ViewCount</p>
-            </div>
+            <video id="courseVideo" width="100%" height="100%" controls controlsList="nodownload" preload="metadata">
+                <source src="@Model.VideoUrl" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
         </div>
         
         <div class="video-controls">
@@ -68,9 +65,49 @@
 
 @section scripts {
 <script>
-    // Mark video as completed (simplified)
-    setTimeout(function() {
-        console.log('Video @Model.VideoId marked as watched');
-    }, 5000);
+    $(document).ready(function() {
+        var video = document.getElementById('courseVideo');
+        var videoWatched = false;
+        
+        // Track video progress
+        video.addEventListener('timeupdate', function() {
+            var progress = (video.currentTime / video.duration) * 100;
+            
+            // Mark as watched when 90% complete
+            if (progress >= 90 && !videoWatched) {
+                videoWatched = true;
+                console.log('Video @Model.VideoId marked as completed');
+                
+                // You can add AJAX call here to save progress to server
+                // $.post('/Enrollment/UpdateProgress', { videoId: @Model.VideoId, progress: 100 });
+            }
+        });
+        
+        // Auto-play next video option (optional)
+        video.addEventListener('ended', function() {
+            @if (ViewBag.NextVideo != null)
+            {
+                <text>
+                // Uncomment to auto-play next video
+                // setTimeout(function() {
+                //     window.location.href = '@Url.Action("Player", new { courseId = ViewBag.Course.CourseId, videoId = ViewBag.NextVideo.VideoId })';
+                // }, 3000);
+                </text>
+            }
+        });
+        
+        // Save playback position
+        var videoKey = 'video_@(Model.VideoId)_position';
+        
+        video.addEventListener('pause', function() {
+            localStorage.setItem(videoKey, video.currentTime);
+        });
+        
+        // Restore playback position
+        var savedPosition = localStorage.getItem(videoKey);
+        if (savedPosition && savedPosition > 0) {
+            video.currentTime = parseFloat(savedPosition);
+        }
+    });
 </script>
 }
