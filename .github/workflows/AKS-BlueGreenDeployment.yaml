@@ -1,0 +1,327 @@
+name: AKS Blue-Green Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_name:
+        description: Name of the deployment
+        required: true
+        default: myapp
+      image_tag:
+        description: Docker image tag to deploy
+        required: true
+      namespace:
+        description: Kubernetes namespace
+        required: true
+        default: default
+      traffic_switch_delay:
+        description: Delay (seconds) before switching traffic to green
+        required: false
+        default: '60'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  blue-green-deployment:
+    name: Blue-Green Deployment
+    runs-on: ubuntu-latest
+    
+    outputs:
+      deployment_status: ${{ steps.deploy.outputs.status }}
+      active_version: ${{ steps.traffic.outputs.active_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure OIDC Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ${{ secrets.AZURE_AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Check Current Active Deployment
+        id: current_deployment
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          
+          # Check which version is currently active (blue or green)
+          CURRENT_ACTIVE=$(kubectl get service $DEPLOYMENT_NAME -n $NAMESPACE -o jsonpath='{.spec.selector.version}' 2>/dev/null || echo "blue")
+          
+          if [ "$CURRENT_ACTIVE" = "blue" ]; then
+            NEXT_VERSION="green"
+          else
+            NEXT_VERSION="blue"
+          fi
+          
+          echo "current_active=$CURRENT_ACTIVE" >> $GITHUB_OUTPUT
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current active version: $CURRENT_ACTIVE"
+          echo "Next version to deploy: $NEXT_VERSION"
+
+      - name: Deploy to Green/Blue Environment
+        id: deploy
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          IMAGE_TAG="${{ inputs.image_tag }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          NEXT_VERSION="${{ steps.current_deployment.outputs.next_version }}"
+          
+          echo "Deploying $IMAGE_TAG to $NEXT_VERSION environment..."
+          
+          # Create deployment manifest for the new version
+          cat > deployment-$NEXT_VERSION.yaml <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: $DEPLOYMENT_NAME-$NEXT_VERSION
+            namespace: $NAMESPACE
+            labels:
+              app: $DEPLOYMENT_NAME
+              version: $NEXT_VERSION
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: $DEPLOYMENT_NAME
+                version: $NEXT_VERSION
+            template:
+              metadata:
+                labels:
+                  app: $DEPLOYMENT_NAME
+                  version: $NEXT_VERSION
+              spec:
+                containers:
+                - name: $DEPLOYMENT_NAME
+                  image: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/$DEPLOYMENT_NAME:$IMAGE_TAG
+                  imagePullPolicy: Always
+                  ports:
+                  - containerPort: 8080
+                  livenessProbe:
+                    httpGet:
+                      path: /health
+                      port: 8080
+                    initialDelaySeconds: 30
+                    periodSeconds: 10
+                  readinessProbe:
+                    httpGet:
+                      path: /ready
+                      port: 8080
+                    initialDelaySeconds: 5
+                    periodSeconds: 5
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 128Mi
+                  limits:
+                    cpu: 500m
+                    memory: 512Mi
+                imagePullSecrets:
+                - name: acr-secret
+          EOF
+          
+          # Apply the deployment
+          kubectl apply -f deployment-$NEXT_VERSION.yaml
+          
+          # Wait for deployment to be ready
+          echo "Waiting for $NEXT_VERSION deployment to be ready..."
+          kubectl rollout status deployment/$DEPLOYMENT_NAME-$NEXT_VERSION -n $NAMESPACE --timeout=5m
+          
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "$NEXT_VERSION deployment successfully deployed"
+
+      - name: Run Health Checks on Green/Blue
+        id: health_check
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          NEXT_VERSION="${{ steps.current_deployment.outputs.next_version }}"
+          
+          echo "Running health checks on $NEXT_VERSION deployment..."
+          
+          # Get pods for the new deployment
+          PODS=$(kubectl get pods -n $NAMESPACE -l app=$DEPLOYMENT_NAME,version=$NEXT_VERSION -o jsonpath='{.items[*].metadata.name}')
+          
+          if [ -z "$PODS" ]; then
+            echo "ERROR: No pods found for $NEXT_VERSION deployment"
+            exit 1
+          fi
+          
+          # Check each pod
+          for POD in $PODS; do
+            echo "Checking pod: $POD"
+            
+            # Check pod status
+            POD_STATUS=$(kubectl get pod $POD -n $NAMESPACE -o jsonpath='{.status.phase}')
+            if [ "$POD_STATUS" != "Running" ]; then
+              echo "ERROR: Pod $POD is in $POD_STATUS state"
+              exit 1
+            fi
+            
+            # Check readiness
+            READY=$(kubectl get pod $POD -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}')
+            if [ "$READY" != "True" ]; then
+              echo "ERROR: Pod $POD is not ready"
+              exit 1
+            fi
+            
+            echo "Pod $POD is healthy"
+          done
+          
+          echo "health_check=passed" >> $GITHUB_OUTPUT
+          echo "All health checks passed"
+
+      - name: Warm Up Green/Blue Environment
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          NEXT_VERSION="${{ steps.current_deployment.outputs.next_version }}"
+          
+          echo "Warming up $NEXT_VERSION environment..."
+          
+          # Get service endpoint
+          PODS=$(kubectl get pods -n $NAMESPACE -l app=$DEPLOYMENT_NAME,version=$NEXT_VERSION -o jsonpath='{.items[0].metadata.name}')
+          
+          if [ ! -z "$PODS" ]; then
+            # Port forward to test the service
+            kubectl port-forward -n $NAMESPACE pod/$PODS 8080:8080 &
+            PF_PID=$!
+            sleep 2
+            
+            # Send some test requests
+            for i in {1..5}; do
+              echo "Test request $i..."
+              curl -s http://localhost:8080/health || true
+              sleep 1
+            done
+            
+            kill $PF_PID || true
+            echo "Warm-up completed"
+          fi
+
+      - name: Switch Traffic to Green/Blue
+        id: traffic
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          NEXT_VERSION="${{ steps.current_deployment.outputs.next_version }}"
+          TRAFFIC_SWITCH_DELAY="${{ inputs.traffic_switch_delay }}"
+          
+          echo "Waiting ${TRAFFIC_SWITCH_DELAY} seconds before switching traffic..."
+          sleep $TRAFFIC_SWITCH_DELAY
+          
+          echo "Switching traffic to $NEXT_VERSION..."
+          
+          # Update service selector to point to new version
+          kubectl patch service $DEPLOYMENT_NAME -n $NAMESPACE -p "{\"spec\":{\"selector\":{\"version\":\"$NEXT_VERSION\"}}}"
+          
+          # Verify service is pointing to new version
+          ACTIVE=$(kubectl get service $DEPLOYMENT_NAME -n $NAMESPACE -o jsonpath='{.spec.selector.version}')
+          
+          if [ "$ACTIVE" = "$NEXT_VERSION" ]; then
+            echo "Traffic successfully switched to $NEXT_VERSION"
+            echo "active_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "ERROR: Failed to switch traffic to $NEXT_VERSION"
+            exit 1
+          fi
+
+      - name: Verify New Deployment
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          
+          echo "Verifying new deployment..."
+          
+          # Get endpoints
+          ENDPOINTS=$(kubectl get endpoints $DEPLOYMENT_NAME -n $NAMESPACE -o jsonpath='{.subsets[*].addresses[*].targetRef.name}')
+          echo "Active pods: $ENDPOINTS"
+          
+          # Monitor metrics briefly
+          for i in {1..10}; do
+            READY=$(kubectl get deployment -n $NAMESPACE -l app=$DEPLOYMENT_NAME -o jsonpath='{.items[*].status.readyReplicas}' | awk '{sum+=int($1)} END {print sum}')
+            echo "Ready replicas: $READY"
+            sleep 2
+          done
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          CURRENT_ACTIVE="${{ steps.current_deployment.outputs.current_active }}"
+          NEXT_VERSION="${{ steps.current_deployment.outputs.next_version }}"
+          
+          echo "Deployment failed. Rolling back to $CURRENT_ACTIVE..."
+          
+          # Switch traffic back to previous version
+          kubectl patch service $DEPLOYMENT_NAME -n $NAMESPACE -p "{\"spec\":{\"selector\":{\"version\":\"$CURRENT_ACTIVE\"}}}"
+          
+          # Delete failed deployment
+          kubectl delete deployment $DEPLOYMENT_NAME-$NEXT_VERSION -n $NAMESPACE --ignore-not-found
+          
+          echo "Rollback completed"
+
+      - name: Clean Up Old Deployment
+        if: success()
+        run: |
+          DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+          NAMESPACE="${{ inputs.namespace }}"
+          CURRENT_ACTIVE="${{ steps.current_deployment.outputs.current_active }}"
+          
+          echo "Cleaning up old $CURRENT_ACTIVE deployment after successful deployment..."
+          
+          # Optional: Delete old deployment after a grace period
+          # kubectl delete deployment $DEPLOYMENT_NAME-$CURRENT_ACTIVE -n $NAMESPACE
+          
+          echo "Keeping old deployment for quick rollback if needed"
+          echo "Run: kubectl delete deployment $DEPLOYMENT_NAME-$CURRENT_ACTIVE -n $NAMESPACE to clean up"
+
+      - name: Deployment Summary
+        run: |
+          cat <<EOF
+          ===================================
+          Blue-Green Deployment Complete
+          ===================================
+          Deployment: ${{ inputs.deployment_name }}
+          Namespace: ${{ inputs.namespace }}
+          Image Tag: ${{ inputs.image_tag }}
+          Previous Active: ${{ steps.current_deployment.outputs.current_active }}
+          New Active: ${{ steps.traffic.outputs.active_version }}
+          Status: SUCCESS
+          ===================================
+          EOF
+
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: blue-green-deployment
+    if: always()
+
+    steps:
+      - name: Deployment Notification
+        run: |
+          echo "Deployment Status: ${{ needs.blue-green-deployment.outputs.deployment_status }}"
+          echo "Active Version: ${{ needs.blue-green-deployment.outputs.active_version }}"
+          
+          if [ "${{ needs.blue-green-deployment.result }}" = "success" ]; then
+            echo "✅ Blue-Green deployment completed successfully"
+          else
+            echo "❌ Blue-Green deployment failed"
+          fi
