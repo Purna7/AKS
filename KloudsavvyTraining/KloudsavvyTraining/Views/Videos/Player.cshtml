@@ -1,0 +1,76 @@
+@model KloudsavvyTraining.Models.Video
+@{
+    ViewBag.Title = Model.Title;
+    var course = ViewBag.Course;
+}
+
+<div class="video-player-page">
+    <div class="video-player-container">
+        <div class="video-wrapper">
+            <div class="video-placeholder">
+                <div class="video-icon">🎥</div>
+                <h2>@Model.Title</h2>
+                <p>Video player would be embedded here</p>
+                <p class="video-url">Source: @Model.VideoUrl</p>
+                <p class="video-info">Duration: @Model.GetFormattedDuration() | Views: @Model.ViewCount</p>
+            </div>
+        </div>
+        
+        <div class="video-controls">
+            @if (ViewBag.PrevVideo != null)
+            {
+                <a href="@Url.Action("Player", new { courseId = course.CourseId, videoId = ViewBag.PrevVideo.VideoId })" 
+                   class="btn btn-secondary">← Previous</a>
+            }
+            
+            <span class="video-progress">Video @Model.OrderIndex of @course.TotalVideos</span>
+            
+            @if (ViewBag.NextVideo != null)
+            {
+                <a href="@Url.Action("Player", new { courseId = course.CourseId, videoId = ViewBag.NextVideo.VideoId })" 
+                   class="btn btn-primary">Next →</a>
+            }
+        </div>
+        
+        <div class="video-info-section">
+            <h1>@Model.Title</h1>
+            <p>@Model.Description</p>
+            
+            <div class="course-context">
+                <h3>Course: @course.Title</h3>
+                <p>Instructor: @course.InstructorName</p>
+                <a href="@Url.Action("Details", "Courses", new { id = course.CourseId })" class="btn btn-outline">Back to Course</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="playlist-sidebar">
+        <h3>Course Content</h3>
+        <div class="playlist">
+            @foreach (var video in course.Videos)
+            {
+                <a href="@Url.Action("Player", new { courseId = course.CourseId, videoId = video.VideoId })" 
+                   class="playlist-item @(video.VideoId == Model.VideoId ? "active" : "") @(!video.IsFree ? "locked" : "")">
+                    <span class="playlist-number">@video.OrderIndex</span>
+                    <div class="playlist-info">
+                        <div class="playlist-title">@video.Title</div>
+                        <div class="playlist-duration">@video.GetFormattedDuration()</div>
+                    </div>
+                    @if (!video.IsFree)
+                    {
+                        <span class="playlist-lock">🔒</span>
+                    }
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    // Mark video as completed (simplified)
+    setTimeout(function() {
+        console.log('Video @Model.VideoId marked as watched');
+    }, 5000);
+</script>
+}

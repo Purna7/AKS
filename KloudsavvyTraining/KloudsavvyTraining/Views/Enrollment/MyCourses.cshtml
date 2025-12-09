@@ -1,0 +1,69 @@
+@model List<KloudsavvyTraining.Models.Enrollment>
+@{
+    ViewBag.Title = "My Courses";
+}
+
+<div class="page-header">
+    <h1>My Learning Dashboard</h1>
+    <p>Track your progress and continue learning</p>
+</div>
+
+@if (Model.Any())
+{
+    <div class="enrollments-grid">
+        @foreach (var enrollment in Model)
+        {
+            var course = ((Dictionary<int, KloudsavvyTraining.Models.Course>)ViewBag.Courses)[enrollment.CourseId];
+            
+            <div class="enrollment-card">
+                <div class="enrollment-thumbnail">@course.Thumbnail</div>
+                <div class="enrollment-info">
+                    <h3>@enrollment.CourseTitle</h3>
+                    <p>Instructor: @course.InstructorName</p>
+                    
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <span>Progress</span>
+                            <span class="progress-percentage">@enrollment.ProgressPercentage%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @enrollment.ProgressPercentage%"></div>
+                        </div>
+                        <div class="progress-details">
+                            @enrollment.CompletedVideos of @enrollment.TotalVideos videos completed
+                        </div>
+                    </div>
+                    
+                    <div class="enrollment-meta">
+                        <span>Enrolled: @enrollment.EnrollmentDate.ToShortDateString()</span>
+                        @if (enrollment.IsCompleted())
+                        {
+                            <span class="completion-badge">✓ Completed</span>
+                        }
+                    </div>
+                    
+                    <div class="enrollment-actions">
+                        @if (enrollment.IsCompleted())
+                        {
+                            <a href="#" class="btn btn-success">Download Certificate</a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Details", "Courses", new { id = course.CourseId })" class="btn btn-primary">Continue Learning</a>
+                        }
+                        <a href="@Url.Action("Details", "Courses", new { id = course.CourseId })" class="btn btn-outline">View Course</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <h2>No courses yet</h2>
+        <p>Start your learning journey by enrolling in a course</p>
+        <a href="@Url.Action("Index", "Courses")" class="btn btn-primary btn-large">Browse Courses</a>
+    </div>
+}

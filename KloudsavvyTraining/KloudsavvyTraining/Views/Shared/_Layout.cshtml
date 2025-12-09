@@ -1,0 +1,131 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en" ng-app="kloudsavvyApp">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Kloudsavvy Training</title>
+    <link href="@Url.Content("~/Content/Site.css")" rel="stylesheet" type="text/css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="@Url.Action("Index", "Home")" class="brand-link">
+                        <div class="brand-icon">🎓</div>
+                        <span class="brand-name">Kloudsavvy Training</span>
+                    </a>
+                </div>
+                
+                <div class="nav-center">
+                    <a href="@Url.Action("Index", "Home")" class="nav-item">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-text">Home</span>
+                    </a>
+                    <a href="@Url.Action("Index", "Courses")" class="nav-item">
+                        <span class="nav-icon">📚</span>
+                        <span class="nav-text">Courses</span>
+                    </a>
+                    <a href="@Url.Action("Dashboard", "Instructor")" class="nav-item">
+                        <span class="nav-icon">👨‍🏫</span>
+                        <span class="nav-text">Teach</span>
+                    </a>
+                </div>
+
+                <div class="nav-right">
+                    @if (Session["UserId"] != null)
+                    {
+                        <a href="@Url.Action("MyCourses", "Enrollment")" class="nav-item">
+                            <span class="nav-icon">📖</span>
+                            <span class="nav-text">My Courses</span>
+                        </a>
+                        <a href="@Url.Action("Logout", "Account")" class="nav-item">
+                            <span class="nav-icon">🚪</span>
+                            <span class="nav-text">Logout</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Login", "Account")" class="btn btn-outline">Login</a>
+                        <a href="@Url.Action("Register", "Account")" class="btn btn-primary">Sign Up</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["Success"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">
+                    @TempData["Error"]
+                </div>
+            }
+            @if (TempData["Info"] != null)
+            {
+                <div class="alert alert-info">
+                    @TempData["Info"]
+                </div>
+            }
+            
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Kloudsavvy Training</h3>
+                    <p>Master technology with hands-on courses taught by industry experts.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="@Url.Action("Index", "Courses")">Browse Courses</a></li>
+                        <li><a href="@Url.Action("Dashboard", "Instructor")">Become Instructor</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="@Url.Action("Index", "Courses", new { category = "DevOps" })">DevOps</a></li>
+                        <li><a href="@Url.Action("Index", "Courses", new { category = "Cloud Computing" })">Cloud</a></li>
+                        <li><a href="@Url.Action("Index", "Courses", new { category = "Kubernetes" })">Kubernetes</a></li>
+                        <li><a href="@Url.Action("Index", "Courses", new { category = "Linux" })">Linux</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">Twitter</a>
+                        <a href="#" class="social-icon">LinkedIn</a>
+                        <a href="#" class="social-icon">YouTube</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; @DateTime.Now.Year Kloudsavvy Training. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="@Url.Content("~/Scripts/app.js")"></script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
