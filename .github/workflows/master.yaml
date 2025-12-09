@@ -8,14 +8,14 @@ permissions:
   id-token: write
 
 jobs:
-  aks_iac:
-    name: AKS Infrastructure
-    uses: ./.github/workflows/AKS-IAC.yaml
+  # aks_iac:
+  #   name: AKS Infrastructure
+  #   uses: ./.github/workflows/AKS-IAC.yaml
 
   dotnet_ci:
     name: Dotnet Application CI
     uses: ./.github/workflows/DotnetApplicaiton-CI.yaml
-    needs: aks_iac
+    #needs: aks_iac
 
   dotnet_cd:
     name: Dotnet Application CD
