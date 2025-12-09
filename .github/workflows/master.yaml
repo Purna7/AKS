@@ -1,0 +1,19 @@
+name: Master Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  aks_iac:
+    name: AKS Infrastructure
+    uses: ./.github/workflows/AKS-IAC.yaml
+
+  dotnet_ci:
+    name: Dotnet Application CI
+    uses: ./.github/workflows/DotnetApplication-CI.yaml
+    needs: aks_iac
+
+  dotnet_cd:
+    name: Dotnet Application CD
+    uses: ./.github/workflows/DotnetApplication-CD.yaml
+    needs: dotnet_ci

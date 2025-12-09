@@ -1,0 +1,11 @@
+name: Dotnet Application CI
+
+on:
+  workflow_call:
+
+jobs:
+  echo_message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo CI Message
+        run: echo "Dotnet Application CI pipeline triggered!"
