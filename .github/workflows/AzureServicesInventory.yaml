@@ -24,6 +24,11 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+      - name: Wait For expiration
+        run: |
+          echo "Waiting for 10 seconds to ensure token propagation..."
+          sleep 6000
 
       - name: Fetch Resource Groups
         run: |
