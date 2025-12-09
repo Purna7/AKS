@@ -9,28 +9,24 @@
 
 <div class="dashboard-stats">
     <div class="stat-card">
-        <div class="stat-icon">📚</div>
         <div class="stat-info">
             <div class="stat-value">@ViewBag.TotalCourses</div>
             <div class="stat-label">Total Courses</div>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">👥</div>
         <div class="stat-info">
             <div class="stat-value">@ViewBag.TotalStudents</div>
             <div class="stat-label">Total Students</div>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">💰</div>
         <div class="stat-info">
             <div class="stat-value">$@ViewBag.TotalRevenue.ToString("N0")</div>
             <div class="stat-label">Total Revenue</div>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">⭐</div>
         <div class="stat-info">
             <div class="stat-value">4.8</div>
             <div class="stat-label">Avg Rating</div>
@@ -49,16 +45,15 @@
         @foreach (var course in ViewBag.MyCourses)
         {
             <div class="course-card">
-                <div class="course-thumbnail">@course.Thumbnail</div>
                 <div class="course-info">
                     <div class="course-status-badge @(course.IsPublished ? "published" : "draft")">
                         @(course.IsPublished ? "Published" : "Draft")
                     </div>
                     <h3>@course.Title</h3>
                     <div class="course-stats">
-                        <span>👥 @course.EnrollmentCount students</span>
-                        <span>⭐ @course.AverageRating</span>
-                        <span>🎥 @course.TotalVideos videos</span>
+                        <span>Students: @course.EnrollmentCount</span>
+                        <span>Rating: @course.AverageRating</span>
+                        <span>Videos: @course.TotalVideos</span>
                     </div>
                     <div class="course-footer">
                         <span class="course-price">@course.GetFormattedPrice()</span>

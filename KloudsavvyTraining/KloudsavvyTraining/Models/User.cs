@@ -10,7 +10,6 @@ namespace KloudsavvyTraining.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Role { get; set; } // Student, Instructor, Admin
-        public string ProfilePicture { get; set; }
         public string Bio { get; set; }
         public DateTime RegisteredDate { get; set; }
         public DateTime? LastLoginDate { get; set; }

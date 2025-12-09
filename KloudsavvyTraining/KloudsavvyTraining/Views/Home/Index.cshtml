@@ -68,14 +68,13 @@
         @foreach (var course in ViewBag.FeaturedCourses)
         {
             <div class="course-card">
-                <div class="course-thumbnail">@course.Thumbnail</div>
                 <div class="course-info">
                     <span class="course-badge">@course.Level</span>
                     <h3>@course.Title</h3>
                     <p class="course-description">@course.ShortDescription</p>
                     <div class="course-meta">
-                        <span class="meta-item">👨‍🏫 @course.InstructorName</span>
-                        <span class="meta-item">⭐ @course.AverageRating</span>
+                        <span class="meta-item">Instructor: @course.InstructorName</span>
+                        <span class="meta-item">Rating: @course.AverageRating</span>
                     </div>
                     <div class="course-footer">
                         <span class="course-price">@course.GetFormattedPrice()</span>

@@ -15,10 +15,10 @@
             <p class="course-lead">@Model.Description</p>
             
             <div class="course-header-meta">
-                <span class="meta-badge">⭐ @Model.AverageRating Rating</span>
-                <span class="meta-badge">👥 @Model.EnrollmentCount Students</span>
-                <span class="meta-badge">📚 @Model.Level</span>
-                <span class="meta-badge">⏱️ @Model.GetFormattedDuration()</span>
+                <span class="meta-badge">Rating: @Model.AverageRating</span>
+                <span class="meta-badge">Students: @Model.EnrollmentCount</span>
+                <span class="meta-badge">Level: @Model.Level</span>
+                <span class="meta-badge">Duration: @Model.GetFormattedDuration()</span>
             </div>
             
             <div class="instructor-info">
@@ -28,7 +28,6 @@
         </div>
         
         <div class="course-sidebar-card">
-            <div class="course-thumbnail-large">@Model.Thumbnail</div>
             <div class="price-section">
                 <div class="price-label">Course Price</div>
                 <div class="price-value">@Model.GetFormattedPrice()</div>
@@ -43,11 +42,11 @@
             <div class="course-includes">
                 <h4>This course includes:</h4>
                 <ul>
-                    <li>✓ @Model.TotalVideos video lectures</li>
-                    <li>✓ Lifetime access</li>
-                    <li>✓ Certificate of completion</li>
-                    <li>✓ Hands-on labs</li>
-                    <li>✓ Downloadable resources</li>
+                    <li>@Model.TotalVideos video lectures</li>
+                    <li>Lifetime access</li>
+                    <li>Certificate of completion</li>
+                    <li>Hands-on labs</li>
+                    <li>Downloadable resources</li>
                 </ul>
             </div>
         </div>
@@ -94,7 +93,7 @@
                             }
                             else
                             {
-                                <span class="locked-badge">🔒 Locked</span>
+                                <span class="locked-badge">Locked</span>
                             }
                         </div>
                     </div>
@@ -108,7 +107,6 @@
                 @foreach (var outcome in Model.LearningOutcomes)
                 {
                     <div class="outcome-item">
-                        <span class="outcome-icon">✓</span>
                         <span>@outcome</span>
                     </div>
                 }

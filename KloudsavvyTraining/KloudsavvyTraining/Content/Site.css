@@ -55,18 +55,6 @@ a {
     color: white;
 }
 
-.brand-icon {
-    width: 45px;
-    height: 45px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    backdrop-filter: blur(10px);
-}
-
 .brand-name {
     font-size: 1.5rem;
     font-weight: 700;
@@ -100,10 +88,6 @@ a {
 .nav-item:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
-}
-
-.nav-icon {
-    font-size: 1.25rem;
 }
 
 /* Main Content */
@@ -411,13 +395,6 @@ main {
 .course-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-}
-
-.course-thumbnail {
-    font-size: 6rem;
-    text-align: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .course-info {
@@ -797,15 +774,6 @@ main {
     top: 100px;
 }
 
-.course-thumbnail-large {
-    font-size: 8rem;
-    text-align: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border-radius: 10px;
-    margin-bottom: 1.5rem;
-}
-
 .price-section {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -959,21 +927,9 @@ main {
 
 .outcome-icon {
     width: 30px;
-    height: 30px;
-    background: #27ae60;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
 }
 
 /* Video Player Page */
-.video-player-page {
-    display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 2rem;
     max-width: 1600px;
     margin: 0 auto;
 }
@@ -1103,18 +1059,11 @@ main {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
+}
+
 .enrollment-info {
     padding: 1.5rem;
-}
-
-.progress-section {
-    margin: 1.5rem 0;
-}
-
-.progress-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
+}   margin-bottom: 0.5rem;
 }
 
 .progress-percentage {
@@ -1192,13 +1141,9 @@ main {
     color: #2c3e50;
 }
 
-.stat-info .stat-label {
-    color: #7f8c8d;
-    font-size: 0.9rem;
 }
 
-.dashboard-actions {
-    display: flex;
+.stat-info .stat-value {
     gap: 1rem;
     margin-bottom: 3rem;
 }
@@ -1434,13 +1379,7 @@ main {
     margin-bottom: 2rem;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .course-header-section,
-    .video-player-page,
-    .auth-page {
-        grid-template-columns: 1fr;
-    }
+.empty-state h2, .empty-state h3 {
     
     .course-sidebar-card {
         position: static;

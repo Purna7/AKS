@@ -16,7 +16,6 @@
             var course = ((Dictionary<int, KloudsavvyTraining.Models.Course>)ViewBag.Courses)[enrollment.CourseId];
             
             <div class="enrollment-card">
-                <div class="enrollment-thumbnail">@course.Thumbnail</div>
                 <div class="enrollment-info">
                     <h3>@enrollment.CourseTitle</h3>
                     <p>Instructor: @course.InstructorName</p>
@@ -38,7 +37,7 @@
                         <span>Enrolled: @enrollment.EnrollmentDate.ToShortDateString()</span>
                         @if (enrollment.IsCompleted())
                         {
-                            <span class="completion-badge">✓ Completed</span>
+                            <span class="completion-badge">Completed</span>
                         }
                     </div>
                     
@@ -61,7 +60,6 @@
 else
 {
     <div class="empty-state">
-        <div class="empty-icon">📚</div>
         <h2>No courses yet</h2>
         <p>Start your learning journey by enrolling in a course</p>
         <a href="@Url.Action("Index", "Courses")" class="btn btn-primary btn-large">Browse Courses</a>

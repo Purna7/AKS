@@ -36,7 +36,6 @@
     @foreach (var course in Model)
     {
         <div class="course-card">
-            <div class="course-thumbnail">@course.Thumbnail</div>
             <div class="course-info">
                 <div class="course-badges">
                     <span class="course-badge">@course.Level</span>
@@ -45,12 +44,12 @@
                 <h3>@course.Title</h3>
                 <p class="course-description">@course.ShortDescription</p>
                 <div class="course-meta">
-                    <span class="meta-item">👨‍🏫 @course.InstructorName</span>
-                    <span class="meta-item">⭐ @course.AverageRating (@course.EnrollmentCount students)</span>
+                    <span class="meta-item">Instructor: @course.InstructorName</span>
+                    <span class="meta-item">Rating: @course.AverageRating (@course.EnrollmentCount students)</span>
                 </div>
                 <div class="course-stats">
-                    <span class="stat-item">🎥 @course.TotalVideos videos</span>
-                    <span class="stat-item">⏱️ @course.GetFormattedDuration()</span>
+                    <span class="stat-item">Videos: @course.TotalVideos</span>
+                    <span class="stat-item">Duration: @course.GetFormattedDuration()</span>
                 </div>
                 <div class="course-footer">
                     <span class="course-price">@course.GetFormattedPrice()</span>
