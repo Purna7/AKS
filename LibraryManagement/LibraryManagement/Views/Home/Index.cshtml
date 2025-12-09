@@ -1,0 +1,307 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="mb-4 fade-in">
+    <h1 class="display-4">📚 RYSS Library Dashboard</h1>
+    <p class="lead">Welcome to Ramayogi Seva Samithi - Empowering minds through knowledge</p>
+</div>
+
+<style>
+    .stat-card {
+        height: 100%;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+    }
+    .stat-card .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1rem;
+        text-align: center;
+    }
+    .stat-card .card-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        min-height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    .stat-card .display-4 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0.25rem 0;
+    }
+    .stat-card .quick-stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+    .stat-card .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+    }
+    
+    .stats-carousel-container {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .stats-carousel {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        scrollbar-width: thin;
+        scrollbar-color: #2c5282 #f1f5f9;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+    }
+    .stats-carousel::-webkit-scrollbar {
+        height: 8px;
+    }
+    .stats-carousel::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    .stats-carousel::-webkit-scrollbar-thumb {
+        background: #2c5282;
+        border-radius: 10px;
+    }
+    .stats-carousel::-webkit-scrollbar-thumb:hover {
+        background: #1a365d;
+    }
+    .stat-card-wrapper {
+        flex: 0 0 250px;
+        min-width: 250px;
+        max-width: 250px;
+    }
+    .stat-card-wrapper .stat-card {
+        width: 100%;
+    }
+    .carousel-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(44, 82, 130, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .carousel-nav-btn:hover {
+        background: rgba(26, 54, 93, 1);
+        transform: translateY(-50%) scale(1.1);
+    }
+    .carousel-nav-btn.left {
+        left: -20px;
+    }
+    .carousel-nav-btn.right {
+        right: -20px;
+    }
+    .carousel-nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="stats-carousel-container" x-data="{ 
+    scrollPos: 0,
+    canScrollLeft: false,
+    canScrollRight: true,
+    updateScrollButtons() {
+        const carousel = this.$refs.carousel;
+        if (carousel) {
+            this.canScrollLeft = carousel.scrollLeft > 0;
+            this.canScrollRight = carousel.scrollLeft < (carousel.scrollWidth - carousel.clientWidth - 5);
+        }
+    },
+    scrollLeft() {
+        const carousel = this.$refs.carousel;
+        if (carousel) {
+            carousel.scrollBy({ left: -270, behavior: 'smooth' });
+            setTimeout(() => this.updateScrollButtons(), 300);
+        }
+    },
+    scrollRight() {
+        const carousel = this.$refs.carousel;
+        if (carousel) {
+            carousel.scrollBy({ left: 270, behavior: 'smooth' });
+            setTimeout(() => this.updateScrollButtons(), 300);
+        }
+    }
+}" x-init="setTimeout(() => updateScrollButtons(), 500)">
+    <button class="carousel-nav-btn left" @@click="scrollLeft" :disabled="!canScrollLeft" x-show="canScrollLeft">
+        <span style="font-size: 1.5rem;">‹</span>
+    </button>
+    <button class="carousel-nav-btn right" @@click="scrollRight" :disabled="!canScrollRight" x-show="canScrollRight">
+        <span style="font-size: 1.5rem;">›</span>
+    </button>
+    
+    <div class="stats-carousel" x-ref="carousel" @@scroll="updateScrollButtons" x-data="{ animated: false }" x-init="setTimeout(() => animated = true, 100)">
+        <div class="stat-card-wrapper" x-show="animated" x-transition.duration.500ms>
+        <div class="card card-ryl card-ryl-primary hover-lift stat-card">
+            <div class="card-body">
+                <div class="quick-stat-icon">📚</div>
+                <h5 class="card-title">Total Books</h5>
+                <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.TotalBooks) count++ }, 100)"
+                   x-text="count">0</p>
+                <a asp-controller="Books" asp-action="Index" class="btn btn-light btn-sm mt-2">View All</a>
+            </div>
+        </div>
+    </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.100ms.duration.500ms>
+            <div class="card card-ryl card-ryl-success hover-lift stat-card">
+                <div class="card-body">
+                    <div class="quick-stat-icon">✅</div>
+                    <h5 class="card-title">Available Books</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.AvailableBooks) count++ }, 100)"
+                       x-text="count">0</p>
+                    <a asp-controller="Books" asp-action="Index" class="btn btn-light btn-sm mt-2">Browse</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.200ms.duration.500ms>
+            <div class="card card-ryl card-ryl-warning hover-lift stat-card">
+                <div class="card-body">
+                    <div class="quick-stat-icon">📖</div>
+                    <h5 class="card-title">Borrowed Books</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.BorrowedBooks) count++ }, 100)"
+                       x-text="count">0</p>
+                    <a asp-controller="Transactions" asp-action="Index" class="btn btn-light btn-sm mt-2">View</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.300ms.duration.500ms>
+            <div class="card card-ryl card-ryl-info hover-lift stat-card">
+                <div class="card-body">
+                    <div class="quick-stat-icon">👥</div>
+                    <h5 class="card-title">Active Members</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.ActiveMembers) count++ }, 100)"
+                       x-text="count">0</p>
+                    <a asp-controller="Visitors" asp-action="Index" class="btn btn-light btn-sm mt-2">View</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.400ms.duration.500ms>
+            <div class="card card-ryl hover-lift stat-card" style="background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); color: white;">
+                <div class="card-body">
+                    <div class="quick-stat-icon">💝</div>
+                    <h5 class="card-title">Total Donations</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.TotalDonations) count++ }, 100)"
+                       x-text="count">0</p>
+                    <a asp-controller="Donations" asp-action="Index" class="btn btn-light btn-sm mt-2">View All</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.500ms.duration.500ms>
+            <div class="card card-ryl hover-lift stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                <div class="card-body">
+                    <div class="quick-stat-icon">⏳</div>
+                    <h5 class="card-title">Pending Reviews</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.PendingDonations) count++ }, 100)"
+                       x-text="count">0</p>
+                    <a asp-controller="Donations" asp-action="Index" class="btn btn-light btn-sm mt-2">Review</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.600ms.duration.500ms>
+            <div class="card card-ryl hover-lift stat-card" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+                <div class="card-body">
+                    <div class="quick-stat-icon">💻</div>
+                    <h5 class="card-title">eBooks Available</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.TotalEbooks) count++ }, 100)"
+                       x-text="count">0</p>
+                    <a asp-controller="Books" asp-action="Index" class="btn btn-light btn-sm mt-2">Browse</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-wrapper" x-show="animated" x-transition.delay.700ms.duration.500ms>
+            <div class="card card-ryl hover-lift stat-card" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white;">
+                <div class="card-body">
+                    <div class="quick-stat-icon">📥</div>
+                    <h5 class="card-title">eBook Downloads</h5>
+                    <p class="display-4" x-data="{ count: 0 }" x-init="setInterval(() => { if(count < @ViewBag.TotalEbookDownloads) count++ }, 50)"
+                       x-text="count">0</p>
+                    <a asp-controller="Books" asp-action="Index" class="btn btn-light btn-sm mt-2">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card card-ryl hover-lift">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--ryl-primary) 0%, var(--ryl-primary-dark) 100%); color: white !important;">
+                <h5 class="mb-0" style="color: white !important;">⚡ Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-controller="Books" asp-action="Create" class="btn btn-ryl-primary">📚 Add New Book</a>
+                    <a asp-controller="Visitors" asp-action="Create" class="btn btn-ryl-accent">👤 Register Member</a>
+                    <a asp-controller="Transactions" asp-action="Borrow" class="btn btn-ryl-secondary">📖 Borrow Book</a>
+                    <a asp-controller="Donations" asp-action="Create" class="btn btn-outline-primary">💝 Donate Book</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card card-ryl hover-lift">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--ryl-primary) 0%, var(--ryl-primary-dark) 100%); color: white !important;">
+                <h5 class="mb-0" style="color: white !important;">📋 About RYSS Library</h5>
+            </div>
+            <div class="card-body">
+                <h6>Our Mission</h6>
+                <p>Ramayogi Seva Samithi (RYSS) Library is dedicated to empowering minds through knowledge and fostering a love for reading. This comprehensive system helps you:</p>
+                <ul>
+                    <li>Manage book inventory and catalog</li>
+                    <li>Track visitor memberships and details</li>
+                    <li>Handle book borrowing and returns</li>
+                    <li>Calculate and manage late fees</li>
+                    <li>Generate reports and statistics</li>
+                </ul>
+                <hr>
+                <h6>Key Features</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul>
+                            <li>Book Management</li>
+                            <li>Visitor Registration</li>
+                            <li>Transaction Tracking</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li>Fine Calculation</li>
+                            <li>Membership Management</li>
+                            <li>Search & Filter</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

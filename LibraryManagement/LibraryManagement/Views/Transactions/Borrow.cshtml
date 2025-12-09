@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Borrow Book";
+}
+
+<div class="mb-4 fade-in">
+    <h1>📚 New Borrow Transaction</h1>
+    <p class="text-muted">Issue a book to a library member</p>
+</div>
+
+<div class="row" x-data="{ selectedBook: '', selectedMember: '' }">
+    <div class="col-md-8">
+        <div class="card card-ryl hover-lift">
+            <div class="card-body">
+                <form asp-action="Borrow" method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-3">
+                        <label for="visitorId" class="form-label form-label-ryl">👤 Select Member</label>
+                        <select name="visitorId" id="visitorId" class="form-select form-control-ryl" required x-model="selectedMember">
+                            <option value="">-- Choose Member --</option>
+                            @foreach (var visitor in ViewBag.Visitors)
+                            {
+                                <option value="@visitor.VisitorId">@visitor.MembershipId - @visitor.GetFullName() (@visitor.MembershipType)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bookId" class="form-label form-label-ryl">📖 Select Book</label>
+                        <select name="bookId" id="bookId" class="form-select form-control-ryl" required x-model="selectedBook">
+                            <option value="">-- Choose Book --</option>
+                            @foreach (var book in ViewBag.Books)
+                            {
+                                <option value="@book.BookId">@book.Title by @book.Author (Available: @book.AvailableCopies)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="loanDays" class="form-label form-label-ryl">📅 Loan Period (Days)</label>
+                        <input type="number" name="loanDays" id="loanDays" class="form-control form-control-ryl" value="14" min="1" max="30" required>
+                        <small class="text-muted">Standard loan period is 14 days</small>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-ryl-primary" :disabled="!selectedBook || !selectedMember">✓ Issue Book</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">✗ Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card card-ryl" style="background: linear-gradient(135deg, var(--ryl-primary-light) 0%, var(--ryl-primary) 100%); color: white;">
+            <div class="card-body">
+                <h5 class="card-title" style="color: white;">📋 Loan Policies</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><strong>📆 Standard Loan:</strong> 14 days</li>
+                    <li class="mb-2"><strong>⏰ Maximum Loan:</strong> 30 days</li>
+                    <li class="mb-2"><strong>💰 Fine Rate:</strong> $1.00 per day</li>
+                    <li class="mb-2"><strong>📚 Max Books:</strong> 5 per member</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

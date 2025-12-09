@@ -1,0 +1,143 @@
+@model IEnumerable<LibraryManagement.Models.Book>
+@{
+    ViewData["Title"] = "Books";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+        <h1>📚 Book Collection</h1>
+        <p class="text-muted">Browse the Rama Yogi Library catalog</p>
+    </div>
+    <a asp-action="Create" class="btn btn-ryl-primary">➕ Add New Book</a>
+</div>
+
+<div class="card card-ryl mb-4" x-data>
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="search-box-ryl">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" name="search" class="form-control form-control-ryl" placeholder="Search by title, author, or ISBN" value="@Context.Request.Query["search"]">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select form-control-ryl">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat" selected="@(Context.Request.Query["category"] == cat)">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-ryl-primary w-100">🔎 Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">↻ Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-ryl table-hover">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>ISBN</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Copies / Size</th>
+                <th>Available</th>
+                <th>Location</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in Model)
+            {
+                <tr>
+                    <td>
+                        @if (book.IsEbook)
+                        {
+                            <span class="badge badge-ryl-success" title="eBook">💻 eBook</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-ryl-primary" title="Physical Book">📚 Book</span>
+                        }
+                    </td>
+                    <td><small>@book.ISBN</small></td>
+                    <td>
+                        <strong>@book.Title</strong>
+                        @if (book.IsEbook)
+                        {
+                            <br /><small class="text-muted">@book.FileFormat • @book.FileSizeInMB MB</small>
+                        }
+                    </td>
+                    <td>@book.Author</td>
+                    <td><span class="badge badge-ryl-info">@book.Category</span></td>
+                    <td class="text-center">
+                        @if (book.IsEbook)
+                        {
+                            <span class="text-muted">∞</span>
+                        }
+                        else
+                        {
+                            <span>@book.TotalCopies</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        @if (book.IsEbook)
+                        {
+                            <span class="badge badge-ryl-success">Always Available</span>
+                        }
+                        else
+                        {
+                            <span class="badge @(book.IsAvailable() ? "badge-ryl-success" : "badge-ryl-danger")">
+                                @book.AvailableCopies
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        @if (book.IsEbook)
+                        {
+                            <span class="badge badge-ryl-info">📥 @book.DownloadCount downloads</span>
+                        }
+                        else
+                        {
+                            @book.ShelfLocation
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            @if (book.IsEbook)
+                            {
+                                <a asp-action="ReadEbook" asp-route-id="@book.BookId" class="btn btn-ryl-primary" title="Read eBook">
+                                    📖 Read
+                                </a>
+                                <a asp-action="DownloadEbook" asp-route-id="@book.BookId" class="btn btn-ryl-accent" title="Download eBook">
+                                    📥 Download
+                                </a>
+                            }
+                            <a asp-action="Details" asp-route-id="@book.BookId" class="btn btn-outline-primary">👁️ Details</a>
+                            <a asp-action="Edit" asp-route-id="@book.BookId" class="btn btn-outline-warning">✏️ Edit</a>
+                            <a asp-action="Delete" asp-route-id="@book.BookId" class="btn btn-outline-danger">🗑️ Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <h4>No books found</h4>
+        <p>Try adjusting your search criteria or add new books to the inventory.</p>
+    </div>
+}

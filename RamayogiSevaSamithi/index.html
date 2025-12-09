@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ramayogi Seva Samithi - A non-profit trust helping elderly, orphans, underprivileged children, and environment conservation">
+    <title>Ramayogi Seva Samithi - Serving Humanity with Compassion</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <h2>🕉️ Ramayogi Seva Samithi</h2>
+                </div>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#home" onclick="closeMobileMenu()">Home</a></li>
+                    <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
+                    <li><a href="#causes" onclick="closeMobileMenu()">Our Causes</a></li>
+                    <li><a href="#impact" onclick="closeMobileMenu()">Impact</a></li>
+                    <li><a href="#volunteer" onclick="closeMobileMenu()">Get Involved</a></li>
+                    <li><a href="#contact" onclick="closeMobileMenu()">Contact</a></li>
+                    <li><a href="#donate" class="btn-donate" onclick="closeMobileMenu()">Donate Now</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="fade-in">Empowering Lives, Nurturing Hope</h1>
+            <p class="fade-in-delay">Serving the elderly, orphans, underprivileged children, and protecting our environment</p>
+            <div class="hero-buttons fade-in-delay-2">
+                <a href="#causes" class="btn btn-primary">Explore Our Work</a>
+                <a href="#donate" class="btn btn-secondary">Support Our Cause</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>About Ramayogi Seva Samithi</h2>
+                <div class="underline"></div>
+            </div>
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="lead">Ramayogi Seva Samithi is a registered non-profit trust dedicated to serving humanity with compassion, dignity, and love. Founded on the principles of selfless service, we work tirelessly to uplift the lives of the most vulnerable members of our society.</p>
+                    <p>Our mission encompasses caring for the elderly, supporting orphaned children, providing education to underprivileged students, assisting low-income families, and protecting our environment through tree plantation drives.</p>
+                    <div class="mission-vision">
+                        <div class="mission-box">
+                            <h3>🎯 Our Mission</h3>
+                            <p>To create a compassionate society where every individual, regardless of age or background, has access to basic necessities, education, and dignity.</p>
+                        </div>
+                        <div class="vision-box">
+                            <h3>🌟 Our Vision</h3>
+                            <p>A world where no elderly person feels abandoned, no child goes uneducated, and our environment thrives for future generations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Causes Section -->
+    <section id="causes" class="causes">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Causes</h2>
+                <div class="underline"></div>
+                <p>We work across multiple areas to create lasting positive impact</p>
+            </div>
+            <div class="causes-grid">
+                <div class="cause-card">
+                    <div class="cause-icon">👴</div>
+                    <h3>Elderly Care</h3>
+                    <p>Providing shelter, medical care, and emotional support to senior citizens who have no one to care for them.</p>
+                    <ul class="cause-list">
+                        <li>Free medical checkups</li>
+                        <li>Nutritious meals</li>
+                        <li>Recreation activities</li>
+                        <li>Companionship programs</li>
+                    </ul>
+                </div>
+                <div class="cause-card">
+                    <div class="cause-icon">👶</div>
+                    <h3>Orphan Support</h3>
+                    <p>Creating a loving home environment for orphaned children and ensuring their holistic development.</p>
+                    <ul class="cause-list">
+                        <li>Safe shelter</li>
+                        <li>Quality education</li>
+                        <li>Healthcare</li>
+                        <li>Emotional counseling</li>
+                    </ul>
+                </div>
+                <div class="cause-card">
+                    <div class="cause-icon">📚</div>
+                    <h3>Education for All</h3>
+                    <p>Empowering underprivileged children through free education, books, uniforms, and learning resources.</p>
+                    <ul class="cause-list">
+                        <li>Free tuition classes</li>
+                        <li>Books & stationery</li>
+                        <li>Computer training</li>
+                        <li>Career guidance</li>
+                    </ul>
+                </div>
+                <div class="cause-card">
+                    <div class="cause-icon">🤝</div>
+                    <h3>Low-Income Support</h3>
+                    <p>Assisting families struggling with poverty through skill development, employment, and financial aid.</p>
+                    <ul class="cause-list">
+                        <li>Vocational training</li>
+                        <li>Job placement</li>
+                        <li>Financial assistance</li>
+                        <li>Food distribution</li>
+                    </ul>
+                </div>
+                <div class="cause-card">
+                    <div class="cause-icon">🌳</div>
+                    <h3>Environment Protection</h3>
+                    <p>Planting trees and promoting environmental awareness to protect our planet for future generations.</p>
+                    <ul class="cause-list">
+                        <li>Tree plantation drives</li>
+                        <li>Awareness campaigns</li>
+                        <li>Waste management</li>
+                        <li>Green initiatives</li>
+                    </ul>
+                </div>
+                <div class="cause-card">
+                    <div class="cause-icon">🎓</div>
+                    <h3>Student Scholarships</h3>
+                    <p>Providing scholarships and mentorship to talented students from disadvantaged backgrounds.</p>
+                    <ul class="cause-list">
+                        <li>Merit scholarships</li>
+                        <li>Mentorship programs</li>
+                        <li>Study materials</li>
+                        <li>Exam fee support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Section -->
+    <section id="impact" class="impact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Impact</h2>
+                <div class="underline"></div>
+                <p>Together, we're making a difference</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" data-target="500">0</div>
+                    <div class="stat-label">Elderly Cared For</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="350">0</div>
+                    <div class="stat-label">Orphans Supported</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="1200">0</div>
+                    <div class="stat-label">Students Educated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="800">0</div>
+                    <div class="stat-label">Families Assisted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="15000">0</div>
+                    <div class="stat-label">Trees Planted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="250">0</div>
+                    <div class="stat-label">Scholarships Awarded</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Volunteer Section -->
+    <section id="volunteer" class="volunteer">
+        <div class="container">
+            <div class="section-header">
+                <h2>Get Involved</h2>
+                <div class="underline"></div>
+                <p>Your time and skills can make a tremendous difference</p>
+            </div>
+            <div class="volunteer-content">
+                <div class="volunteer-options">
+                    <div class="volunteer-card">
+                        <h3>🙋 Volunteer</h3>
+                        <p>Join us in our activities and contribute your time to serve those in need.</p>
+                        <button class="btn btn-primary" onclick="showVolunteerForm()">Register as Volunteer</button>
+                    </div>
+                    <div class="volunteer-card">
+                        <h3>💼 Partner</h3>
+                        <p>Collaborate with us as a corporate partner or organization to amplify our impact.</p>
+                        <button class="btn btn-primary" onclick="showPartnerForm()">Become a Partner</button>
+                    </div>
+                    <div class="volunteer-card">
+                        <h3>📢 Spread Awareness</h3>
+                        <p>Help us reach more people by sharing our mission on social media.</p>
+                        <button class="btn btn-primary" onclick="shareOnSocial()">Share Our Cause</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Donation Section -->
+    <section id="donate" class="donate">
+        <div class="container">
+            <div class="section-header">
+                <h2>Support Our Mission</h2>
+                <div class="underline"></div>
+                <p>Your generous contribution can transform lives</p>
+            </div>
+            <div class="donation-content">
+                <div class="donation-options">
+                    <div class="donation-card">
+                        <h3>One-Time Donation</h3>
+                        <div class="amount-buttons">
+                            <button class="amount-btn" onclick="selectAmount(500)">₹500</button>
+                            <button class="amount-btn" onclick="selectAmount(1000)">₹1,000</button>
+                            <button class="amount-btn" onclick="selectAmount(5000)">₹5,000</button>
+                            <button class="amount-btn" onclick="selectAmount(10000)">₹10,000</button>
+                        </div>
+                        <input type="number" id="customAmount" placeholder="Custom Amount" class="custom-amount">
+                        <button class="btn btn-primary btn-full" onclick="processDonation()">Donate Now</button>
+                    </div>
+                    <div class="donation-info">
+                        <h3>How Your Donation Helps</h3>
+                        <ul class="donation-impact">
+                            <li><strong>₹500</strong> - Provides nutritious meals for 5 elderly persons for a week</li>
+                            <li><strong>₹1,000</strong> - Sponsors school supplies for 2 underprivileged children</li>
+                            <li><strong>₹5,000</strong> - Covers medical expenses for one senior citizen</li>
+                            <li><strong>₹10,000</strong> - Funds one month's education for 5 orphans</li>
+                            <li><strong>₹25,000</strong> - Plants and maintains 100 trees</li>
+                        </ul>
+                        <div class="tax-info">
+                            <p><strong>Note:</strong> All donations are eligible for tax deduction under Section 80G.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contact Us</h2>
+                <div class="underline"></div>
+                <p>We'd love to hear from you</p>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div>
+                            <h4>Address</h4>
+                            <p>Ramayogi Seva Samithi Trust<br>123 Service Road, Compassion Colony<br>Bangalore - 560001, Karnataka, India</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📞</div>
+                        <div>
+                            <h4>Phone</h4>
+                            <p>+91 9876543210<br>+91 9876543211</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">✉️</div>
+                        <div>
+                            <h4>Email</h4>
+                            <p>info@ramayogisevasamithi.org<br>volunteer@ramayogisevasamithi.org</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">🕐</div>
+                        <div>
+                            <h4>Working Hours</h4>
+                            <p>Monday - Saturday: 9:00 AM - 6:00 PM<br>Sunday: 10:00 AM - 2:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form id="contactForm" onsubmit="submitContactForm(event)">
+                        <div class="form-group">
+                            <input type="text" id="name" placeholder="Your Name *" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="Your Email *" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="phone" placeholder="Your Phone">
+                        </div>
+                        <div class="form-group">
+                            <select id="subject" required>
+                                <option value="">Select Subject *</option>
+                                <option value="volunteer">Volunteer Inquiry</option>
+                                <option value="donation">Donation Query</option>
+                                <option value="partnership">Partnership Opportunity</option>
+                                <option value="general">General Inquiry</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" rows="5" placeholder="Your Message *" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Ramayogi Seva Samithi</h3>
+                    <p>Serving humanity with compassion, dignity, and love. Together, we can create a better world for all.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook">f</a>
+                        <a href="#" aria-label="Twitter">t</a>
+                        <a href="#" aria-label="Instagram">i</a>
+                        <a href="#" aria-label="LinkedIn">in</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#causes">Our Causes</a></li>
+                        <li><a href="#impact">Impact</a></li>
+                        <li><a href="#volunteer">Volunteer</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Get Involved</h4>
+                    <ul>
+                        <li><a href="#donate">Donate</a></li>
+                        <li><a href="#volunteer">Become a Volunteer</a></li>
+                        <li><a href="#contact">Partner With Us</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Annual Reports</a></li>
+                        <li><a href="#">Financial Transparency</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Ramayogi Seva Samithi. All rights reserved. | Registered Trust No: XXXX/YYYY</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" onclick="scrollToTop()" title="Go to top">↑</button>
+
+    <script src="script.js"></script>
+</body>
+</html>

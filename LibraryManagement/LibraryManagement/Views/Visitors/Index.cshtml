@@ -1,0 +1,90 @@
+@model IEnumerable<LibraryManagement.Models.Visitor>
+@{
+    ViewData["Title"] = "Members";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+        <h1>👥 Library Members</h1>
+        <p class="text-muted">Manage Rama Yogi Library member registrations</p>
+    </div>
+    <a asp-action="Create" class="btn btn-ryl-accent">➕ Register New Member</a>
+</div>
+
+<div class="card card-ryl mb-4" x-data>
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="search-box-ryl">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" name="search" class="form-control form-control-ryl" placeholder="Search by name, membership ID, or email" value="@Context.Request.Query["search"]">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="membershipType" class="form-select form-control-ryl">
+                        <option value="">All Types</option>
+                        @foreach (var type in ViewBag.MembershipTypes)
+                        {
+                            <option value="@type" selected="@(Context.Request.Query["membershipType"] == type)">@type</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-ryl-primary w-100">🔎 Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-ryl table-hover">
+        <thead>
+            <tr>
+                <th>Membership ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Books Borrowed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var visitor in Model)
+            {
+                <tr>
+                    <td><strong>@visitor.MembershipId</strong></td>
+                    <td>@visitor.GetFullName()</td>
+                    <td>@visitor.Email</td>
+                    <td>@visitor.Phone</td>
+                    <td><span class="badge bg-secondary">@visitor.MembershipType</span></td>
+                    <td>
+                        <span class="badge @(visitor.IsMembershipValid() ? "bg-success" : "bg-danger")">
+                            @(visitor.IsMembershipValid() ? "Active" : "Expired")
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-info">@visitor.CurrentBorrowedBooks()</span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a asp-action="Details" asp-route-id="@visitor.VisitorId" class="btn btn-outline-primary">Details</a>
+                            <a asp-action="Edit" asp-route-id="@visitor.VisitorId" class="btn btn-outline-warning">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <h4>No visitors found</h4>
+        <p>Try adjusting your search criteria or register new visitors.</p>
+    </div>
+}

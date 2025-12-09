@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RYSS Library</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/rama-yogi-library.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/LibraryManagement.styles.css" asp-append-version="true" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-ryl mb-3" x-data="{ mobileOpen: false }">
+            <div class="container-fluid">
+                <a class="navbar-brand navbar-brand-ryl" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="navbar-brand-icon">📚</span>RYSS Library
+                </a>
+                <button class="navbar-toggler" type="button" @@click="mobileOpen = !mobileOpen" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" :class="{ 'show': mobileOpen }">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-ryl" asp-area="" asp-controller="Home" asp-action="Index">🏠 Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-ryl" asp-area="" asp-controller="Books" asp-action="Index">📖 Books</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-ryl" asp-area="" asp-controller="Visitors" asp-action="Index">👥 Members</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-ryl" asp-area="" asp-controller="Transactions" asp-action="Index">🔄 Transactions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-ryl" asp-area="" asp-controller="Donations" asp-action="Index">💝 Donations</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3 page-enter">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-ryl-success alert-dismissible fade show" role="alert" x-data="{ show: true }" x-show="show" x-transition>
+                    ✅ @TempData["Success"]
+                    <button type="button" class="btn-close" @@click="show = false"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-ryl-error alert-dismissible fade show" role="alert" x-data="{ show: true }" x-show="show" x-transition>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-ryl-warning alert-dismissible fade show" role="alert" x-data="{ show: true }" x-show="show" x-transition>
+                    ⚠️ @TempData["Warning"]
+                    <button type="button" class="btn-close" @@click="show = false"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer-ryl">
+        <div class="container text-center">
+            <p class="mb-1"><strong>Ramayogi Seva Samithi (RYSS)</strong> - Empowering minds through knowledge</p>
+            <p class="mb-0">&copy; @DateTime.Now.Year RYSS Library. All rights reserved. | <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a></p>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

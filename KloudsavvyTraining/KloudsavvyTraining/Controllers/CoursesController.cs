@@ -189,6 +189,16 @@ namespace KloudsavvyTraining.Controllers
         private List<Video> GenerateVideosForCourse(Course course)
         {
             var videos = new List<Video>();
+            // Using publicly available sample video URLs for demonstration
+            var sampleVideoUrls = new[]
+            {
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+            };
+
             for (int i = 1; i <= course.TotalVideos; i++)
             {
                 videos.Add(new Video
@@ -197,7 +207,7 @@ namespace KloudsavvyTraining.Controllers
                     CourseId = course.CourseId,
                     Title = $"Lecture {i}: {course.Title} - Part {i}",
                     Description = $"Learn about {course.Title} in this comprehensive lecture.",
-                    VideoUrl = $"/videos/course{course.CourseId}_video{i}.mp4",
+                    VideoUrl = sampleVideoUrls[(i - 1) % sampleVideoUrls.Length], // Cycle through sample videos
                     DurationSeconds = 600 + (i * 30),
                     OrderIndex = i,
                     IsFree = i <= 2 // First 2 videos are free preview

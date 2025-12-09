@@ -1,48 +1,39 @@
-# Sample Training Videos
+# Sample Videos Directory
 
-This folder contains sample video files for the KloudsavvyTraining platform.
+This directory contains sample video files for the KloudsavvyTraining platform.
 
-## Course Videos Structure
+## Directory Structure
 
-### Course 1: Docker for Absolute Beginners
-- course1_video1.mp4 - Introduction to Docker
-- course1_video2.mp4 - Docker Installation
-- course1_video3.mp4 - Docker Images and Containers
+Videos are organized by course ID:
+- `course1_video*.mp4` - Docker for Absolute Beginners
+- `course2_video*.mp4` - Kubernetes for Beginners
+- `course3_video*.mp4` - AWS Solutions Architect
+- `course4_video*.mp4` - Jenkins CI/CD Pipeline
+- `course5_video*.mp4` - Linux Administration Bootcamp
+- `course6_video*.mp4` - Terraform Infrastructure as Code
 
-### Course 2: Kubernetes for Beginners
-- course2_video1.mp4 - Kubernetes Overview
-- course2_video2.mp4 - Pods and Deployments
-- course2_video3.mp4 - Services and Networking
+## Sample Videos
 
-### Course 3: AWS Solutions Architect
-- course3_video1.mp4 - AWS Fundamentals
-- course3_video2.mp4 - EC2 and VPC
-- course3_video3.mp4 - S3 and IAM
+Currently, placeholder video files are provided. To use actual videos:
 
-### Course 4: Jenkins CI/CD Pipeline
-- course4_video1.mp4 - Jenkins Introduction
-- course4_video2.mp4 - Creating Pipelines
-- course4_video3.mp4 - Jenkins Integration
+1. **Replace placeholder files** with your actual MP4 video files
+2. **Maintain naming convention**: `course{id}_video{number}.mp4`
+3. **Recommended video settings**:
+   - Format: MP4 (H.264 codec)
+   - Resolution: 1920x1080 (Full HD) or 1280x720 (HD)
+   - Frame rate: 30fps
+   - Audio: AAC codec, 128kbps
 
-### Course 5: Linux Administration Bootcamp
-- course5_video1.mp4 - Linux Basics
-- course5_video2.mp4 - File System and Permissions
-- course5_video3.mp4 - Shell Scripting
+## Using External Video Hosting
 
-### Course 6: Terraform Infrastructure as Code
-- course6_video1.mp4 - Terraform Introduction
-- course6_video2.mp4 - Resources and Providers
-- course6_video3.mp4 - State Management
+For production, consider using:
+- **Azure Media Services** - Scalable streaming with adaptive bitrate
+- **AWS S3 + CloudFront** - Cost-effective storage and CDN delivery
+- **YouTube (unlisted)** - Free hosting with embed support
+- **Vimeo** - Professional video hosting with privacy controls
 
-## Video Format
-- Format: MP4
-- Resolution: 1920x1080 (Full HD)
-- Codec: H.264
-- Audio: AAC
+## Sample Video Links (Free Resources)
 
-## Using Real Videos
-To use real video content:
-1. Replace these placeholder files with actual MP4 videos
-2. Ensure videos are optimized for web streaming
-3. Consider using a CDN or video hosting service (Azure Media Services, AWS S3, YouTube, Vimeo)
-4. Update the VideoUrl property in the CoursesController to point to your video hosting location
+For testing, you can use these free sample tech videos:
+- Big Buck Bunny: http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+- Sample video: https://www.w3schools.com/html/mov_bbb.mp4

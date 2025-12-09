@@ -1,0 +1,103 @@
+@using LibraryManagement.Controllers
+@model IEnumerable<LibraryManagement.Models.BorrowTransaction>
+@{
+    ViewData["Title"] = "Transactions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+        <h1>🔄 Transaction History</h1>
+        <p class="text-muted">Track all borrowing and return activities</p>
+    </div>
+    <a asp-action="Borrow" class="btn btn-ryl-secondary">📖 New Borrow Transaction</a>
+</div>
+
+<div class="card card-ryl mb-4" x-data>
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select name="status" class="form-select form-control-ryl">
+                        <option value="">All Statuses</option>
+                        @foreach (var stat in ViewBag.Statuses)
+                        {
+                            <option value="@stat" selected="@(Context.Request.Query["status"] == stat)">@stat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-ryl-primary w-100">📊 Filter</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">↻ Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-ryl table-hover">
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Book</th>
+                <th>Member</th>
+                <th>Borrow Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+                <th>Fine</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in Model)
+            {
+                <tr>
+                    <td><strong>#@transaction.TransactionId</strong></td>
+                    <td>@BooksController.GetBookById(transaction.BookId)?.Title</td>
+                    <td>@VisitorsController.GetVisitorById(transaction.VisitorId)?.GetFullName()</td>
+                    <td>@transaction.BorrowDate.ToShortDateString()</td>
+                    <td>@transaction.DueDate.ToShortDateString()</td>
+                    <td>@(transaction.ReturnDate?.ToShortDateString() ?? "-")</td>
+                    <td>
+                        <span class="badge 
+                            @(transaction.Status == "Borrowed" ? "bg-primary" :
+                              transaction.Status == "Returned" ? "bg-success" :
+                              transaction.Status == "Overdue" ? "bg-danger" : "bg-secondary")">
+                            @transaction.Status
+                        </span>
+                    </td>
+                    <td>
+                        @if (transaction.FineAmount > 0)
+                        {
+                            <span class="text-danger fw-bold">$@transaction.FineAmount.Value.ToString("F2")</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">$0.00</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            @if (transaction.Status == "Borrowed" || transaction.Status == "Overdue")
+                            {
+                                <a asp-action="Return" asp-route-id="@transaction.TransactionId" class="btn btn-outline-success">Return</a>
+                            }
+                            <a asp-action="Details" asp-route-id="@transaction.TransactionId" class="btn btn-outline-primary">Details</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <h4>No transactions found</h4>
+        <p>Start by creating a new borrow transaction.</p>
+    </div>
+}
