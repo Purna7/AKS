@@ -1,0 +1,56 @@
+@model ECommerceApp.Models.Order
+@{
+    ViewBag.Title = "Order Complete";
+}
+
+<div class="success-page">
+    <div class="success-icon">&check;</div>
+    <h1>Order Complete!</h1>
+    <p class="lead">Thank you for your purchase, @Model.CustomerName!</p>
+    
+    <div class="order-details">
+        <h2>Order Details</h2>
+        <p><strong>Order Number:</strong> #@Model.Id</p>
+        <p><strong>Order Date:</strong> @Model.OrderDate.ToString("MMM dd, yyyy HH:mm")</p>
+        <p><strong>Status:</strong> <span class="badge badge-success">@Model.Status</span></p>
+        <p><strong>Email:</strong> @Model.Email</p>
+        
+        <h3>Shipping Address</h3>
+        <p>
+            @Model.ShippingAddress<br />
+            @Model.City, @Model.ZipCode
+        </p>
+
+        <h3>Order Items</h3>
+        <table class="order-items-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>$@item.Subtotal.ToString("F2")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2"><strong>Total:</strong></td>
+                    <td><strong>$@Model.Total.ToString("F2")</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="success-actions">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Return to Home</a>
+        <a href="@Url.Action("Index", "Products")" class="btn btn-secondary">Continue Shopping</a>
+    </div>
+</div>

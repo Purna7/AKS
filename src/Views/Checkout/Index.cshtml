@@ -1,0 +1,65 @@
+@model ECommerceApp.Models.Order
+@{
+    ViewBag.Title = "Checkout";
+}
+
+<div class="page-header">
+    <h1>Checkout</h1>
+</div>
+
+<div class="checkout-container">
+    <div class="checkout-form">
+        <h2>Shipping Information</h2>
+        @using (Html.BeginForm("ProcessOrder", "Checkout", FormMethod.Post))
+        {
+            <div class="form-group">
+                <label for="CustomerName">Full Name *</label>
+                @Html.TextBoxFor(m => m.CustomerName, new { @class = "form-control", required = "required" })
+            </div>
+
+            <div class="form-group">
+                <label for="Email">Email *</label>
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", required = "required" })
+            </div>
+
+            <div class="form-group">
+                <label for="ShippingAddress">Address *</label>
+                @Html.TextBoxFor(m => m.ShippingAddress, new { @class = "form-control", required = "required" })
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="City">City *</label>
+                    @Html.TextBoxFor(m => m.City, new { @class = "form-control", required = "required" })
+                </div>
+
+                <div class="form-group">
+                    <label for="ZipCode">Zip Code *</label>
+                    @Html.TextBoxFor(m => m.ZipCode, new { @class = "form-control", required = "required" })
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="@Url.Action("Index", "Cart")" class="btn btn-secondary">← Back to Cart</a>
+                <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+            </div>
+        }
+    </div>
+
+    <div class="order-summary">
+        <h2>Order Summary</h2>
+        <table class="summary-table">
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Product.Name x @item.Quantity</td>
+                    <td>$@item.Subtotal.ToString("F2")</td>
+                </tr>
+            }
+            <tr class="summary-total">
+                <td><strong>Total:</strong></td>
+                <td><strong>$@Model.Total.ToString("F2")</strong></td>
+            </tr>
+        </table>
+    </div>
+</div>

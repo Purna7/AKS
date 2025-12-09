@@ -14,8 +14,8 @@ RUN powershell -Command \
 WORKDIR /src
 
 # Copy project files
-COPY ["YourApp.csproj", "./"]
-COPY ["packages.config", "./"]
+COPY ["src/SampleWebApp.csproj", "./"]
+COPY ["src/packages.config", "./"]
 
 # Restore NuGet packages
 RUN powershell -Command \
@@ -30,7 +30,7 @@ COPY . .
 # Build application
 RUN powershell -Command \
     $msbuildPath = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe'; \
-    & $msbuildPath YourApp.csproj /p:Configuration=Release /p:Platform=AnyCPU
+    & $msbuildPath SampleWebApp.csproj /p:Configuration=Release /p:Platform=AnyCPU /p:DeployOnBuild=true /p:PublishProfile=Release
 
 # Runtime stage
 FROM mcr.microsoft.com/windows/servercore:ltsc2022
@@ -54,8 +54,11 @@ COPY --from=builder /src/bin/Release .
 # Configure IIS
 RUN powershell -Command \
     Import-Module WebAdministration; \
-    New-Website -Name "YourApp" -PhysicalPath "C:\app" -Port 8080 -Force; \
-    Set-ItemProperty -Path "IIS:\AppPools\DefaultAppPool" -Name "managedRuntimeVersion" -Value "v4.0"
+    Remove-Website -Name 'Default Web Site' -ErrorAction SilentlyContinue; \
+    New-Website -Name "SampleWebApp" -PhysicalPath "C:\app" -Port 8080 -Force; \
+    New-WebAppPool -Name "SampleWebAppPool" -Force; \
+    Set-ItemProperty -Path "IIS:\AppPools\SampleWebAppPool" -Name "managedRuntimeVersion" -Value "v4.0"; \
+    Set-ItemProperty -Path "IIS:\Sites\SampleWebApp" -Name "applicationPool" -Value "SampleWebAppPool"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

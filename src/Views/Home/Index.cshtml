@@ -1,0 +1,118 @@
+@{
+    ViewBag.Title = "Home";
+}
+
+<div class="hero-banner">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="hero-badge">New Arrivals</div>
+        <h1 class="hero-title">Transform Your Shopping Experience</h1>
+        <p class="hero-subtitle">Discover premium products curated just for you</p>
+        <div class="hero-actions">
+            <a href="@Url.Action("Index", "Products")" class="btn btn-primary btn-lg hero-btn">
+                Explore Collection
+                <span class="btn-arrow">→</span>
+            </a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <span class="stat-number">1000+</span>
+                <span class="stat-label">Products</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">50K+</span>
+                <span class="stat-label">Happy Customers</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">99%</span>
+                <span class="stat-label">Satisfaction</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="feature-card-modern">
+        <div class="feature-icon feature-icon-blue">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 7h-9"></path>
+                <path d="M14 17H5"></path>
+                <circle cx="17" cy="17" r="3"></circle>
+                <circle cx="7" cy="7" r="3"></circle>
+            </svg>
+        </div>
+        <h3>Free Shipping</h3>
+        <p>Fast delivery on all orders over $50</p>
+    </div>
+    <div class="feature-card-modern">
+        <div class="feature-icon feature-icon-green">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+        </div>
+        <h3>Secure Payment</h3>
+        <p>Your transactions are 100% protected</p>
+    </div>
+    <div class="feature-card-modern">
+        <div class="feature-icon feature-icon-purple">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+        </div>
+        <h3>Easy Returns</h3>
+        <p>Hassle-free 30-day return policy</p>
+    </div>
+    <div class="feature-card-modern">
+        <div class="feature-icon feature-icon-orange">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+        </div>
+        <h3>Premium Quality</h3>
+        <p>Handpicked top-rated products</p>
+    </div>
+</div>
+
+<div class="categories-section">
+    <div class="section-header">
+        <h2>Shop by Category</h2>
+        <p class="section-subtitle">Browse our curated collections</p>
+    </div>
+    <div class="category-grid-modern">
+        <div class="category-card-large">
+            <div class="category-image category-electronics"></div>
+            <div class="category-content">
+                <span class="category-badge">Trending</span>
+                <h3>Electronics</h3>
+                <p>Cutting-edge technology and gadgets</p>
+                <a href="@Url.Action("Index", "Products", new { category = "Electronics" })" class="category-link">
+                    Explore Now <span>\u2192</span>
+                </a>
+            </div>
+        </div>
+        <div class="category-card-large">
+            <div class="category-image category-furniture"></div>
+            <div class="category-content">
+                <span class="category-badge">Popular</span>
+                <h3>Furniture</h3>
+                <p>Transform your space with style</p>
+                <a href="@Url.Action("Index", "Products", new { category = "Furniture" })" class="category-link">
+                    Explore Now <span>\u2192</span>
+                </a>
+            </div>
+        </div>
+        <div class="category-card-large">
+            <div class="category-image category-more"></div>
+            <div class="category-content">
+                <span class="category-badge">New</span>
+                <h3>More Categories</h3>
+                <p>Discover all our amazing products</p>
+                <a href="@Url.Action("Index", "Products")" class="category-link">
+                    Explore Now <span>\u2192</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

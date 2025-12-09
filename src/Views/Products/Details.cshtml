@@ -1,0 +1,43 @@
+@model ECommerceApp.Models.Product
+@{
+    ViewBag.Title = Model.Name;
+}
+
+<div class="product-details">
+    <div class="product-image-large">[Product Image]</div>
+    <div class="product-info">
+        <h1>@Model.Name</h1>
+        <p class="category"><strong>Category:</strong> @Model.Category</p>
+        <p class="price-large">$@Model.Price.ToString("F2")</p>
+        <p class="stock-status">
+            @if (Model.InStock)
+            {
+                <span class="text-success">In Stock</span>
+            }
+            else
+            {
+                <span class="text-danger">✗ Out of Stock</span>
+            }
+        </p>
+        
+        @if (Model.InStock)
+        {
+            using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post))
+            {
+                @Html.Hidden("productId", Model.Id)
+                <div class="quantity-selector">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" name="quantity" id="quantity" value="1" min="1" max="10" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">Add to Cart</button>
+            }
+        }
+
+        <div class="product-description">
+            <h3>Product Description</h3>
+            <p>This is a high-quality @Model.Category.ToLower() item that meets all your needs. Perfect for everyday use!</p>
+        </div>
+
+        <a href="@Url.Action("Index")" class="btn btn-secondary">← Back to Products</a>
+    </div>
+</div>
