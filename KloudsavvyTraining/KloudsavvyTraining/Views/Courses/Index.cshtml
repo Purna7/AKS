@@ -1,0 +1,70 @@
+@model List<KloudsavvyTraining.Models.Course>
+@{
+    ViewBag.Title = "All Courses";
+}
+
+<div class="page-header">
+    <h1>All Courses</h1>
+    <p>Choose from @Model.Count professional courses</p>
+</div>
+
+<div class="filters">
+    <div class="filter-group">
+        <label>Category:</label>
+        <a href="@Url.Action("Index")" class="filter-btn @(string.IsNullOrEmpty(ViewBag.CurrentCategory) ? "active" : "")">All</a>
+        @foreach (var category in ViewBag.Categories)
+        {
+            <a href="@Url.Action("Index", new { category = category })" 
+               class="filter-btn @(ViewBag.CurrentCategory == category ? "active" : "")">@category</a>
+        }
+    </div>
+    
+    <div class="filter-group">
+        <label>Level:</label>
+        <a href="@Url.Action("Index", new { category = ViewBag.CurrentCategory })" 
+           class="filter-btn @(string.IsNullOrEmpty(ViewBag.CurrentLevel) ? "active" : "")">All</a>
+        <a href="@Url.Action("Index", new { category = ViewBag.CurrentCategory, level = "Beginner" })" 
+           class="filter-btn @(ViewBag.CurrentLevel == "Beginner" ? "active" : "")">Beginner</a>
+        <a href="@Url.Action("Index", new { category = ViewBag.CurrentCategory, level = "Intermediate" })" 
+           class="filter-btn @(ViewBag.CurrentLevel == "Intermediate" ? "active" : "")">Intermediate</a>
+        <a href="@Url.Action("Index", new { category = ViewBag.CurrentCategory, level = "Advanced" })" 
+           class="filter-btn @(ViewBag.CurrentLevel == "Advanced" ? "active" : "")">Advanced</a>
+    </div>
+</div>
+
+<div class="course-grid">
+    @foreach (var course in Model)
+    {
+        <div class="course-card">
+            <div class="course-thumbnail">@course.Thumbnail</div>
+            <div class="course-info">
+                <div class="course-badges">
+                    <span class="course-badge">@course.Level</span>
+                    <span class="course-badge">@course.CategoryName</span>
+                </div>
+                <h3>@course.Title</h3>
+                <p class="course-description">@course.ShortDescription</p>
+                <div class="course-meta">
+                    <span class="meta-item">👨‍🏫 @course.InstructorName</span>
+                    <span class="meta-item">⭐ @course.AverageRating (@course.EnrollmentCount students)</span>
+                </div>
+                <div class="course-stats">
+                    <span class="stat-item">🎥 @course.TotalVideos videos</span>
+                    <span class="stat-item">⏱️ @course.GetFormattedDuration()</span>
+                </div>
+                <div class="course-footer">
+                    <span class="course-price">@course.GetFormattedPrice()</span>
+                    <a href="@Url.Action("Details", new { id = course.CourseId })" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <h3>No courses found</h3>
+        <p>Try adjusting your filters</p>
+    </div>
+}

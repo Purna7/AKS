@@ -1,0 +1,63 @@
+@{
+    ViewBag.Title = "Register";
+}
+
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>Create Account</h1>
+            <p>Join thousands of students learning technology</p>
+        </div>
+        
+        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "auth-form" }))
+        {
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" name="firstName" class="form-control" placeholder="John" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" name="lastName" class="form-control" placeholder="Doe" required />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" name="email" class="form-control" placeholder="your@email.com" required />
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Create a strong password" required />
+            </div>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="terms" required />
+                    <span>I agree to the Terms of Service and Privacy Policy</span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-large btn-block">Create Account</button>
+        }
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="@Url.Action("Login")">Login here</a></p>
+        </div>
+    </div>
+    
+    <div class="auth-side">
+        <div class="auth-side-content">
+            <h2>Why Choose Kloudsavvy?</h2>
+            <ul class="features-list">
+                <li>✓ Expert-led video courses</li>
+                <li>✓ Real-world projects</li>
+                <li>✓ Industry-recognized certificates</li>
+                <li>✓ Lifetime course access</li>
+                <li>✓ Active community support</li>
+            </ul>
+        </div>
+    </div>
+</div>

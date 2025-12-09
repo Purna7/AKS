@@ -1,0 +1,134 @@
+@model KloudsavvyTraining.Models.Course
+@{
+    ViewBag.Title = Model.Title;
+}
+
+<div class="course-details-page">
+    <div class="course-header-section">
+        <div class="course-header-info">
+            <div class="course-breadcrumb">
+                <a href="@Url.Action("Index", "Home")">Home</a> / 
+                <a href="@Url.Action("Index")">Courses</a> / 
+                @Model.CategoryName
+            </div>
+            <h1>@Model.Title</h1>
+            <p class="course-lead">@Model.Description</p>
+            
+            <div class="course-header-meta">
+                <span class="meta-badge">⭐ @Model.AverageRating Rating</span>
+                <span class="meta-badge">👥 @Model.EnrollmentCount Students</span>
+                <span class="meta-badge">📚 @Model.Level</span>
+                <span class="meta-badge">⏱️ @Model.GetFormattedDuration()</span>
+            </div>
+            
+            <div class="instructor-info">
+                <span class="instructor-label">Instructor:</span>
+                <strong>@Model.InstructorName</strong>
+            </div>
+        </div>
+        
+        <div class="course-sidebar-card">
+            <div class="course-thumbnail-large">@Model.Thumbnail</div>
+            <div class="price-section">
+                <div class="price-label">Course Price</div>
+                <div class="price-value">@Model.GetFormattedPrice()</div>
+            </div>
+            
+            @using (Html.BeginForm("Enroll", "Enrollment", FormMethod.Post))
+            {
+                <input type="hidden" name="courseId" value="@Model.CourseId" />
+                <button type="submit" class="btn btn-large btn-enroll">Enroll Now</button>
+            }
+            
+            <div class="course-includes">
+                <h4>This course includes:</h4>
+                <ul>
+                    <li>✓ @Model.TotalVideos video lectures</li>
+                    <li>✓ Lifetime access</li>
+                    <li>✓ Certificate of completion</li>
+                    <li>✓ Hands-on labs</li>
+                    <li>✓ Downloadable resources</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="course-content-tabs">
+        <div class="tabs">
+            <a href="#overview" class="tab-link active">Overview</a>
+            <a href="#curriculum" class="tab-link">Curriculum</a>
+            <a href="#outcomes" class="tab-link">Learning Outcomes</a>
+        </div>
+        
+        <div id="overview" class="tab-content active">
+            <h2>Course Description</h2>
+            <p>@Model.Description</p>
+            
+            <h3>Prerequisites</h3>
+            <ul>
+                @foreach (var prereq in Model.Prerequisites)
+                {
+                    <li>@prereq</li>
+                }
+            </ul>
+        </div>
+        
+        <div id="curriculum" class="tab-content">
+            <h2>Course Curriculum</h2>
+            <div class="video-list">
+                @foreach (var video in Model.Videos)
+                {
+                    <div class="video-item">
+                        <div class="video-item-info">
+                            <span class="video-number">@video.OrderIndex.</span>
+                            <div class="video-details">
+                                <h4>@video.Title</h4>
+                                <span class="video-duration">@video.GetFormattedDuration()</span>
+                            </div>
+                        </div>
+                        <div class="video-actions">
+                            @if (video.IsFree)
+                            {
+                                <a href="@Url.Action("Player", "Videos", new { courseId = Model.CourseId, videoId = video.VideoId })" 
+                                   class="btn btn-sm">Preview</a>
+                            }
+                            else
+                            {
+                                <span class="locked-badge">🔒 Locked</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div id="outcomes" class="tab-content">
+            <h2>What You'll Learn</h2>
+            <div class="outcomes-grid">
+                @foreach (var outcome in Model.LearningOutcomes)
+                {
+                    <div class="outcome-item">
+                        <span class="outcome-icon">✓</span>
+                        <span>@outcome</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    // Simple tab switching
+    document.querySelectorAll('.tab-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            const target = this.getAttribute('href').substring(1);
+            document.getElementById(target).classList.add('active');
+        });
+    });
+</script>
+}
