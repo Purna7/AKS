@@ -95,4 +95,21 @@ variable "azure_storage_account_access_key" {
 	default     = ""
 }
 
+variable "acr_name" {
+	description = "Name of the Azure Container Registry (must be globally unique, alphanumeric only)"
+	type        = string
+	default     = "kloudsavvyacr"
+}
+
+variable "acr_sku" {
+	description = "SKU of the Azure Container Registry"
+	type        = string
+	default     = "Standard"
+
+	validation {
+		condition     = contains(["Basic", "Standard", "Premium"], var.acr_sku)
+		error_message = "ACR SKU must be Basic, Standard, or Premium."
+	}
+}
+
 
