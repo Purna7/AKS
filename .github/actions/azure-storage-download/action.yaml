@@ -1,0 +1,84 @@
+name: Azure Storage Download
+description: Download files from Azure Storage Account using OIDC authentication
+
+inputs:
+  client-id:
+    description: Azure app (client) ID for OIDC authentication
+    required: true
+  tenant-id:
+    description: Azure tenant ID for OIDC authentication
+    required: true
+  subscription-id:
+    description: Azure subscription ID
+    required: true
+  storage-account-name:
+    description: Name of the Azure Storage Account
+    required: true
+  container-name:
+    description: Name of the blob container to download from
+    required: true
+  blob-path:
+    description: Path or pattern of blobs to download (e.g., 'folder/file.txt' or '*')
+    required: true
+  download-path:
+    description: Local directory path to download files to
+    required: false
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - name: Azure Login (OIDC)
+      uses: ./.github/actions/azure-oidc-login
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+
+    - name: Download Files from Storage Account
+      shell: bash
+      run: |
+        STORAGE_ACCOUNT="${{ inputs.storage-account-name }}"
+        CONTAINER="${{ inputs.container-name }}"
+        BLOB_PATH="${{ inputs.blob-path }}"
+        DOWNLOAD_PATH="${{ inputs.download-path }}"
+
+        # Create download directory if it doesn't exist
+        mkdir -p "$DOWNLOAD_PATH"
+
+        echo "Downloading files from Azure Storage..."
+        echo "Storage Account: $STORAGE_ACCOUNT"
+        echo "Container: $CONTAINER"
+        echo "Blob Path: $BLOB_PATH"
+        echo "Download to: $DOWNLOAD_PATH"
+
+        # Check if blob path contains wildcards or is a specific file
+        if [[ "$BLOB_PATH" == "*" ]] || [[ "$BLOB_PATH" == *"*"* ]]; then
+          # Download all blobs matching pattern
+          echo "Downloading all blobs matching pattern: $BLOB_PATH"
+          az storage blob download-batch \
+            --account-name "$STORAGE_ACCOUNT" \
+            --source "$CONTAINER" \
+            --destination "$DOWNLOAD_PATH" \
+            --pattern "$BLOB_PATH" \
+            --auth-mode login
+        else
+          # Download specific file
+          echo "Downloading specific blob: $BLOB_PATH"
+          # Extract file name from path
+          FILE_NAME=$(basename "$BLOB_PATH")
+          az storage blob download \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --name "$BLOB_PATH" \
+            --file "$DOWNLOAD_PATH/$FILE_NAME" \
+            --auth-mode login
+        fi
+
+        echo "Download completed successfully"
+
+    - name: List Downloaded Files
+      shell: bash
+      run: |
+        echo "Files downloaded to ${{ inputs.download-path }}:"
+        ls -lah "${{ inputs.download-path }}" || echo "Download directory is empty"
