@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="80" viewBox="0 0 300 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Cloud Icon -->
+  <g transform="translate(5, 15)">
+    <path d="M50 25c7.364 0 13.333 5.97 13.333 13.333S57.364 51.666 50 51.666H23.333c-9.205 0-16.667-7.462-16.667-16.667 0-8.24 5.976-15.095 13.845-16.432C21.51 12.529 27.852 8 35.222 8c5.765 0 10.817 3.286 13.307 8.089C50.995 15.85 52.73 15.333 54.667 15.333c9.573 0 17.333 7.76 17.333 17.333z" 
+          fill="url(#logoGradient)" 
+          stroke="#ffffff" 
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+    
+    <!-- Connection nodes -->
+    <circle cx="30" cy="30" r="3" fill="#10b981"/>
+    <circle cx="45" cy="25" r="3" fill="#3b82f6"/>
+    <circle cx="60" cy="30" r="3" fill="#8b5cf6"/>
+    
+    <!-- K letter integrated -->
+    <path d="M45 38v12m0-6l5-6m-5 6l5 6" 
+          stroke="#ffffff" 
+          stroke-width="2.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          opacity="0.9"/>
+  </g>
+  
+  <!-- Brand Text -->
+  <text x="95" y="45" font-family="Inter, sans-serif" font-size="28" font-weight="700" fill="url(#textGradient)" letter-spacing="-0.02em">
+    kloudmanager
+  </text>
+  
+  <!-- Tagline -->
+  <text x="95" y="62" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#94a3b8" letter-spacing="0.05em" text-transform="uppercase">
+    KLOUDWIT SOLUTIONS
+  </text>
+</svg>

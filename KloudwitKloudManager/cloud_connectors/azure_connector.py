@@ -527,6 +527,20 @@ class AzureConnector:
             try:
                 result_resource = cost_client.query.usage(scope, query_resource)
                 
+                # Extract currency from the result if available
+                try:
+                    if hasattr(result_resource, 'properties') and hasattr(result_resource.properties, 'columns'):
+                        for column in result_resource.properties.columns:
+                            if hasattr(column, 'name') and (column.name == 'Cost' or column.name == 'PreTaxCost' or column.name == 'CostUSD'):
+                                if hasattr(column, 'type') and '(' in str(column.type):
+                                    # Extract currency from type like "Number(USD)" or "Currency(INR)"
+                                    currency_match = str(column.type).split('(')[-1].rstrip(')')
+                                    if currency_match and len(currency_match) == 3:
+                                        cost_data['currency'] = currency_match
+                                        logger.info(f"Detected currency: {currency_match}")
+                except Exception as curr_error:
+                    logger.warning(f"Could not extract currency: {curr_error}")
+                
                 if hasattr(result_resource, 'rows') and result_resource.rows:
                     for row in result_resource.rows:
                         if len(row) >= 3:
@@ -615,7 +629,8 @@ class AzureConnector:
             
             cost_data['total_cost'] = round(cost_data['total_cost'], 2)
             
-            logger.info(f"Retrieved cost data: Total ${cost_data['total_cost']} for last 30 days")
+            logger.info(f"Retrieved cost data: Total {cost_data['currency']} {cost_data['total_cost']} for last 30 days")
+            logger.info(f"Cost breakdown: {len(cost_data['cost_by_resource'])} resources, {len(cost_data['cost_by_service'])} services, {len(cost_data['daily_costs'])} days")
             
         except Exception as e:
             logger.error(f"Error fetching cost data: {e}")

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Simplified cloud for favicon -->
+  <path d="M24 13c1.657 0 3 1.343 3 3s-1.343 3-3 3H10c-2.761 0-5-2.239-5-5 0-2.485 1.915-4.524 4.354-4.729C9.782 7.527 11.756 6 14.133 6c1.729 0 3.245 0.986 3.992 2.427C18.878 8.155 19.623 8 20.4 8c2.872 0 5.2 2.328 5.2 4s-2.328 4-5.2 4H24z" 
+        fill="url(#iconGradient)"/>
+  
+  <!-- K letter -->
+  <path d="M16 17v6m0-3l2.5-3m-2.5 3l2.5 3" 
+        stroke="#ffffff" 
+        stroke-width="1.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+</svg>

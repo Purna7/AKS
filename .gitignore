@@ -86,3 +86,7 @@ packages/
 
 # Node modules (if using npm)
 node_modules/
+# Environment files
+KloudwitKloudManager/.env
+.env
+*.env

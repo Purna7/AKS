@@ -2,12 +2,48 @@
 let currentView = 'dashboard';
 let currentFilter = 'all';
 let refreshInterval;
+let currentCurrency = 'USD'; // Default currency
+let currentCurrencySymbol = '$'; // Default symbol
 
 // Pagination state
 let currentPage = 1;
 let pageSize = 10;
 let totalResources = 0;
 let allResources = [];
+
+// Currency symbol mapping
+function getCurrencySymbol(currency) {
+    const symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'INR': '₹',
+        'JPY': '¥',
+        'CNY': '¥',
+        'AUD': 'A$',
+        'CAD': 'C$',
+        'CHF': 'CHF',
+        'SEK': 'kr',
+        'NOK': 'kr',
+        'DKK': 'kr',
+        'BRL': 'R$',
+        'ZAR': 'R',
+        'RUB': '₽',
+        'KRW': '₩',
+        'SGD': 'S$',
+        'NZD': 'NZ$',
+        'MXN': 'MX$',
+        'HKD': 'HK$',
+        'TRY': '₺',
+        'PLN': 'zł',
+        'THB': '฿'
+    };
+    return symbols[currency] || currency + ' ';
+}
+
+function formatCurrency(amount, decimals = 2) {
+    return `${currentCurrencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -58,6 +94,7 @@ function switchView(view) {
     const titles = {
         'dashboard': { title: 'Multi-Cloud Dashboard', subtitle: 'Real-time overview of your cloud resources' },
         'resources': { title: 'Cloud Resources', subtitle: 'Manage all your cloud resources in one place' },
+        'github': { title: 'GitHub Actions', subtitle: 'Monitor and manage your GitHub workflows and action runs' },
         'providers': { title: 'Cloud Providers', subtitle: 'Configure and manage cloud provider connections' },
         'costs': { title: 'Cost Analysis', subtitle: 'Track and analyze your cloud spending for the last 30 days' },
         'compliance': { title: 'Compliance Status', subtitle: 'View non-compliant resources and policy violations' },
@@ -75,6 +112,9 @@ function switchView(view) {
             break;
         case 'resources':
             loadResources();
+            break;
+        case 'github':
+            loadGitHubActionsView();
             break;
         case 'providers':
             loadProviders();
@@ -102,10 +142,16 @@ async function loadDashboardData() {
         if (result.success) {
             const data = result.data;
             
+            // Update currency if provided
+            if (data.currency) {
+                currentCurrency = data.currency;
+                currentCurrencySymbol = getCurrencySymbol(data.currency);
+            }
+            
             // Update summary cards
             document.getElementById('total-resources').textContent = data.total_resources;
             document.getElementById('total-providers').textContent = data.total_providers;
-            document.getElementById('total-cost').textContent = `$${data.total_cost_30d.toLocaleString()}`;
+            document.getElementById('total-cost').textContent = formatCurrency(data.total_cost_30d, 0);
             document.getElementById('total-alerts').textContent = data.alerts_count;
             
             // Update resource distribution
@@ -128,6 +174,9 @@ async function loadDashboardData() {
             
             // Update provider cards
             updateProviderCards(data.provider_counts);
+            
+            // Load GitHub Actions
+            loadGitHubActions();
             
             // Load recent alerts
             loadRecentAlerts();
@@ -177,8 +226,17 @@ async function loadResources() {
         const result = await response.json();
         
         if (result.success) {
-            allResources = result.resources || [];
+            // Filter out GitHub Actions from Resources view
+            allResources = (result.resources || []).filter(resource => 
+                resource.resource_type !== 'GitHub Action' && resource.type !== 'GitHub Action'
+            );
             totalResources = allResources.length;
+            
+            console.log('Loaded resources:', {
+                total: result.resources.length,
+                afterFilter: totalResources,
+                allResources: allResources.length
+            });
             
             // Reset to first page when filter changes
             currentPage = 1;
@@ -227,15 +285,24 @@ function displayPage() {
 
 // Update pagination controls
 function updatePaginationControls() {
-    const totalPages = Math.ceil(totalResources / pageSize);
+    const totalPages = totalResources === 0 ? 0 : Math.ceil(totalResources / pageSize);
     const startIndex = totalResources === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-    const endIndex = Math.min(currentPage * pageSize, totalResources);
+    const endIndex = totalResources === 0 ? 0 : Math.min(currentPage * pageSize, totalResources);
+    
+    console.log('Pagination update:', {
+        totalResources,
+        totalPages,
+        currentPage,
+        startIndex,
+        endIndex,
+        pageSize
+    });
     
     // Update info
     document.getElementById('page-start').textContent = startIndex;
     document.getElementById('page-end').textContent = endIndex;
     document.getElementById('total-resources').textContent = totalResources;
-    document.getElementById('current-page').textContent = currentPage;
+    document.getElementById('current-page').textContent = totalResources === 0 ? 0 : currentPage;
     document.getElementById('total-pages').textContent = totalPages;
     
     // Enable/disable buttons
@@ -512,8 +579,14 @@ async function loadCosts() {
         if (costResult.success) {
             const costs = costResult.costs || {};
             
+            // Update currency if provided
+            if (costs.currency) {
+                currentCurrency = costs.currency;
+                currentCurrencySymbol = getCurrencySymbol(costs.currency);
+            }
+            
             // Update total cost
-            document.getElementById('total-cost').textContent = `$${(costs.total_cost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('total-cost').textContent = formatCurrency(costs.total_cost || 0);
             
             // Update period
             if (costs.period_start && costs.period_end) {
@@ -534,7 +607,7 @@ async function loadCosts() {
                 costByService.innerHTML = topServices.map(service => `
                     <div class="cost-item">
                         <span class="cost-name">${service.service_name}</span>
-                        <span class="cost-amount">$${service.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span class="cost-amount">${formatCurrency(service.cost)}</span>
                     </div>
                 `).join('');
             }
@@ -554,7 +627,7 @@ async function loadCosts() {
                             <span class="cost-name">${resource.resource_name || 'Unknown'}</span>
                             <span class="cost-type">${resource.resource_type || ''}</span>
                         </div>
-                        <span class="cost-amount">$${resource.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span class="cost-amount">${formatCurrency(resource.cost)}</span>
                     </div>
                 `).join('');
             }
@@ -619,3 +692,613 @@ function loadTheme() {
 
 // Initialize theme on page load
 loadTheme();
+
+// GitHub Actions Functions
+async function discoverGitHubResources() {
+    // Try to find status divs in current view
+    const statusDiv = document.getElementById('github-status') || document.getElementById('github-main-status');
+    const statsDiv = document.getElementById('github-stats');
+    
+    try {
+        if (statusDiv) {
+            statusDiv.innerHTML = '<div class="loading">🔄 Discovering GitHub Actions...</div>';
+        }
+        if (statsDiv) {
+            statsDiv.innerHTML = '';
+        }
+        
+        const response = await fetch('/api/github/discover');
+        const result = await response.json();
+        
+        if (result.success) {
+            if (statusDiv) {
+                statusDiv.innerHTML = `<div class="success">✅ ${result.message}</div>`;
+            }
+            
+            // Load usage stats if on GitHub view
+            if (currentView === 'github') {
+                await loadGitHubUsageStats();
+                await loadGitHubActionsView();
+            } else {
+                // Load usage stats for providers view
+                await loadGitHubStats();
+            }
+            
+            // Refresh dashboard if that's current view
+            if (currentView === 'dashboard') {
+                loadDashboardData();
+            }
+        } else {
+            if (statusDiv) {
+                statusDiv.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+            }
+        }
+    } catch (error) {
+        console.error('Error discovering GitHub resources:', error);
+        if (statusDiv) {
+            statusDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+    }
+}
+
+async function loadGitHubStats() {
+    const statsDiv = document.getElementById('github-stats');
+    
+    try {
+        const response = await fetch('/api/github/usage-stats?days=30');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.stats;
+            statsDiv.innerHTML = `
+                <div class="github-stats">
+                    <h4>📊 Usage Stats (Last 30 Days)</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Workflows:</span>
+                            <span class="stat-value">${stats.total_workflows}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Runs:</span>
+                            <span class="stat-value">${stats.total_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Successful:</span>
+                            <span class="stat-value success">${stats.successful_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Failed:</span>
+                            <span class="stat-value error">${stats.failed_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Duration:</span>
+                            <span class="stat-value">${Math.round(stats.total_duration_minutes)} min</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading GitHub stats:', error);
+    }
+}
+
+// Store all GitHub actions for filtering
+let allGitHubActions = [];
+
+async function loadGitHubActionsView() {
+    const mainViewDiv = document.getElementById('github-actions-main-view');
+    const refreshIcon = document.getElementById('github-view-refresh-icon');
+    const repoFilter = document.getElementById('repo-filter');
+    
+    try {
+        // Show loading state
+        if (refreshIcon) refreshIcon.textContent = '⏳';
+        mainViewDiv.innerHTML = '<div class="loading">Loading GitHub Actions...</div>';
+        
+        // Fetch GitHub Action resources
+        const response = await fetch('/api/resources?type=GitHub Action');
+        const result = await response.json();
+        
+        if (result.success && result.resources.length > 0) {
+            allGitHubActions = result.resources;
+            
+            // Populate repository filter
+            populateRepoFilter(result.resources);
+            
+            displayGitHubActionsGrid(result.resources, mainViewDiv);
+        } else {
+            allGitHubActions = [];
+            mainViewDiv.innerHTML = `
+                <div class="github-empty-state">
+                    <p>No GitHub Actions found</p>
+                    <p>Click <strong>Discover Actions</strong> above to fetch your workflows</p>
+                </div>
+            `;
+            // Reset filter
+            if (repoFilter) {
+                repoFilter.innerHTML = '<option value="all">All Repositories</option>';
+            }
+        }
+        
+        if (refreshIcon) refreshIcon.textContent = '🔄';
+    } catch (error) {
+        console.error('Error loading GitHub Actions view:', error);
+        mainViewDiv.innerHTML = `
+            <div class="error-state">
+                <p>❌ Error loading GitHub Actions: ${error.message}</p>
+            </div>
+        `;
+        if (refreshIcon) refreshIcon.textContent = '🔄';
+    }
+}
+
+function populateRepoFilter(actions) {
+    const repoFilter = document.getElementById('repo-filter');
+    if (!repoFilter) return;
+    
+    // Get unique repositories (use tags.repository which has owner/repo format)
+    const repositories = [...new Set(actions.map(action => {
+        // Try metadata first, then tags, then fall back to extracting from name
+        return action.metadata?.repository || 
+               action.tags?.repository || 
+               action.name?.split('/')[0] || 
+               'Unknown';
+    }))].filter(repo => repo !== 'Unknown').sort();
+    
+    // Build options HTML with icons
+    let optionsHtml = '<option value="all">🔍 All Repositories</option>';
+    repositories.forEach(repo => {
+        optionsHtml += `<option value="${repo}">📦 ${repo}</option>`;
+    });
+    
+    repoFilter.innerHTML = optionsHtml;
+}
+
+function filterGitHubActionsByRepo() {
+    const repoFilter = document.getElementById('repo-filter');
+    const mainViewDiv = document.getElementById('github-actions-main-view');
+    
+    if (!repoFilter || !mainViewDiv) return;
+    
+    const selectedRepo = repoFilter.value;
+    
+    if (selectedRepo === 'all') {
+        // Show all actions
+        displayGitHubActionsGrid(allGitHubActions, mainViewDiv);
+    } else {
+        // Filter by selected repository (check all possible locations)
+        const filteredActions = allGitHubActions.filter(action => {
+            const repo = action.metadata?.repository || 
+                        action.tags?.repository || 
+                        action.name?.split('/')[0] || 
+                        'Unknown';
+            return repo === selectedRepo;
+        });
+        
+        if (filteredActions.length > 0) {
+            displayGitHubActionsGrid(filteredActions, mainViewDiv);
+        } else {
+            mainViewDiv.innerHTML = `
+                <div class="github-empty-state">
+                    <p>No workflows found for repository: <strong>${selectedRepo}</strong></p>
+                </div>
+            `;
+        }
+    }
+}
+
+async function loadGitHubUsageStats() {
+    const statsDiv = document.getElementById('github-usage-stats');
+    
+    try {
+        statsDiv.innerHTML = '<div class="loading">Loading usage statistics...</div>';
+        
+        const response = await fetch('/api/github/usage-stats?days=30');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.stats;
+            statsDiv.innerHTML = `
+                <div class="github-stats">
+                    <h4>📊 Usage Statistics (Last 30 Days)</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Workflows:</span>
+                            <span class="stat-value">${stats.total_workflows}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Runs:</span>
+                            <span class="stat-value">${stats.total_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Successful:</span>
+                            <span class="stat-value success">${stats.successful_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Failed:</span>
+                            <span class="stat-value error">${stats.failed_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">In Progress:</span>
+                            <span class="stat-value">${stats.in_progress_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Duration:</span>
+                            <span class="stat-value">${Math.round(stats.total_duration_minutes)} min</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading GitHub usage stats:', error);
+        statsDiv.innerHTML = `<div class="error-state"><p>❌ Error loading statistics</p></div>`;
+    }
+}
+
+function displayGitHubActionsGrid(actions, containerDiv) {
+    // Group by repository (use consistent field across metadata/tags)
+    const byRepo = {};
+    actions.forEach(action => {
+        const repo = action.metadata?.repository || 
+                     action.tags?.repository || 
+                     action.name?.split('/')[0] || 
+                     'Unknown';
+        if (!byRepo[repo]) {
+            byRepo[repo] = [];
+        }
+        byRepo[repo].push(action);
+    });
+    
+    // Build HTML
+    let html = '<div class="github-repos-grid">';
+    
+    for (const [repo, workflows] of Object.entries(byRepo)) {
+        const totalRuns = workflows.reduce((sum, w) => sum + (w.metadata?.total_runs || 0), 0);
+        const successRuns = workflows.reduce((sum, w) => sum + (w.metadata?.success_runs || 0), 0);
+        const failureRuns = workflows.reduce((sum, w) => sum + (w.metadata?.failure_runs || 0), 0);
+        const successRate = totalRuns > 0 ? Math.round((successRuns / totalRuns) * 100) : 0;
+        
+        // Get repository URL from first workflow
+        const repoUrl = workflows[0]?.metadata?.repository_url || `https://github.com/${repo}`;
+        
+        html += `
+            <div class="github-repo-card">
+                <div class="repo-header">
+                    <h4>📦 <a href="${repoUrl}" target="_blank" class="repo-link">${repo}</a></h4>
+                    <span class="workflow-count">${workflows.length} workflow${workflows.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div class="repo-stats">
+                    <div class="repo-stat">
+                        <span class="stat-label">Total Runs</span>
+                        <span class="stat-value">${totalRuns}</span>
+                    </div>
+                    <div class="repo-stat">
+                        <span class="stat-label">Success Rate</span>
+                        <span class="stat-value success">${successRate}%</span>
+                    </div>
+                </div>
+                <div class="workflows-list">
+        `;
+        
+        // Add workflows
+        workflows.forEach(workflow => {
+            const status = workflow.status.toLowerCase();
+            const statusClass = status === 'success' ? 'success' : 
+                               status === 'failure' ? 'failed' : 
+                               status === 'in_progress' ? 'running' : 'unknown';
+            
+            const workflowName = workflow.metadata?.workflow_name || workflow.name;
+            const lastRun = workflow.metadata?.last_run ? 
+                new Date(workflow.metadata.last_run).toLocaleString() : 'Never';
+            const workflowUrl = workflow.metadata?.workflow_url || '#';
+            const owner = workflow.metadata?.owner || repo.split('/')[0];
+            const repoName = workflow.metadata?.repository_name || repo.split('/')[1] || repo;
+            const workflowId = workflow.metadata?.workflow_id || '';
+            
+            html += `
+                <div class="workflow-item" onclick="showWorkflowLogs('${owner}', '${repoName}', ${workflowId}, '${workflowName.replace(/'/g, "\\'")}'  , '${workflowUrl}')" style="cursor: pointer;">
+                    <div class="workflow-info">
+                        <span class="workflow-name">⚡ ${workflowName}</span>
+                        <span class="workflow-status status-${statusClass}">${workflow.status}</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <span class="workflow-runs">${workflow.size}</span>
+                        <span class="workflow-last-run">Last: ${lastRun}</span>
+                        <button onclick="event.stopPropagation(); quickTriggerWorkflow('${owner}', '${repoName}', ${workflowId}, this)" class="workflow-quick-trigger" title="Quick trigger on main branch">▶️</button>
+                        <a href="${workflowUrl}" target="_blank" class="workflow-link" onclick="event.stopPropagation()" title="View on GitHub">🔗</a>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    containerDiv.innerHTML = html;
+}
+
+async function loadGitHubActions() {
+    const dashboardDiv = document.getElementById('github-actions-dashboard');
+    const refreshIcon = document.getElementById('github-refresh-icon');
+    
+    try {
+        // Show loading state
+        if (refreshIcon) refreshIcon.textContent = '⏳';
+        dashboardDiv.innerHTML = '<div class="loading">Loading GitHub Actions...</div>';
+        
+        // Fetch GitHub Action resources
+        const response = await fetch('/api/resources?type=GitHub Action');
+        const result = await response.json();
+        
+        if (result.success && result.resources.length > 0) {
+            displayGitHubActionsGrid(result.resources, dashboardDiv);
+        } else {
+            dashboardDiv.innerHTML = `
+                <div class="github-empty-state">
+                    <p>No GitHub Actions found</p>
+                    <p>Go to <strong>Providers</strong> → <strong>GitHub Actions</strong> and click <strong>Discover Actions</strong></p>
+                </div>
+            `;
+        }
+        
+        refreshIcon.textContent = '🔄';
+    } catch (error) {
+        console.error('Error loading GitHub Actions:', error);
+        dashboardDiv.innerHTML = `
+            <div class="error-state">
+                <p>❌ Error loading GitHub Actions: ${error.message}</p>
+            </div>
+        `;
+        refreshIcon.textContent = '🔄';
+    }
+}
+
+async function showWorkflowLogs(owner, repo, workflowId, workflowName, workflowUrl) {
+    const modal = document.getElementById('github-logs-modal');
+    const titleEl = document.getElementById('modal-workflow-title');
+    const infoEl = document.getElementById('modal-workflow-info');
+    const runsEl = document.getElementById('modal-runs-list');
+    
+    // Show modal
+    modal.style.display = 'block';
+    
+    // Update title
+    titleEl.innerHTML = `⚡ ${workflowName}`;
+    
+    // Show workflow info with trigger button
+    infoEl.innerHTML = `
+        <div class=\"workflow-details\">
+            <div class=\"detail-item\">
+                <strong>Repository:</strong> ${owner}/${repo}
+            </div>
+            <div class=\"detail-item\">
+                <strong>Workflow ID:</strong> ${workflowId}
+            </div>
+            <div class=\"detail-item\">
+                <label for=\"workflow-branch\"><strong>Branch:</strong></label>
+                <input type=\"text\" id=\"workflow-branch\" value=\"main\" class=\"branch-input\" placeholder=\"main\" />
+            </div>
+            <div class=\"detail-item\">
+                <button onclick=\"triggerWorkflow('${owner}', '${repo}', ${workflowId})\" class=\"btn btn-sm btn-success\" id=\"trigger-workflow-btn\">
+                    ▶️ Trigger Workflow
+                </button>
+                <a href=\"${workflowUrl}\" target=\"_blank\" class=\"btn btn-sm btn-primary\">
+                    🔗 View on GitHub
+                </a>
+            </div>
+        </div>
+        <div id=\"trigger-status\" class=\"trigger-status\"></div>
+    `;
+    
+    // Load runs
+    runsEl.innerHTML = '<div class=\"loading\">Loading workflow runs...</div>';
+    
+    try {
+        const response = await fetch(`/api/github/workflow-runs/${owner}/${repo}/${workflowId}?days=30`);
+        const result = await response.json();
+        
+        if (result.success && result.runs.length > 0) {
+            let runsHtml = '<div class=\"runs-timeline\">';
+            
+            result.runs.forEach(run => {
+                const status = run.status;
+                const conclusion = run.conclusion || 'in_progress';
+                const statusClass = conclusion === 'success' ? 'success' : 
+                                  conclusion === 'failure' ? 'failed' : 
+                                  status === 'in_progress' ? 'running' : 'unknown';
+                
+                const createdAt = new Date(run.created_at).toLocaleString();
+                const updatedAt = new Date(run.updated_at).toLocaleString();
+                const duration = run.run_started_at && run.updated_at ? 
+                    calculateDuration(run.run_started_at, run.updated_at) : 'N/A';
+                
+                const commitMsg = run.head_commit?.message || 'No commit message';
+                const commitShort = commitMsg.split('\\n')[0].substring(0, 60);
+                const actor = run.actor?.login || 'Unknown';
+                
+                runsHtml += `
+                    <div class=\"run-item\">
+                        <div class=\"run-header\">
+                            <span class=\"run-number\">#${run.run_number}</span>
+                            <span class=\"run-status status-${statusClass}\">${conclusion || status}</span>
+                            <span class=\"run-duration\">⏱️ ${duration}</span>
+                        </div>
+                        <div class=\"run-details\">
+                            <div class=\"run-commit\">💬 ${commitShort}</div>
+                            <div class=\"run-meta\">
+                                <span>👤 ${actor}</span>
+                                <span>📅 ${createdAt}</span>
+                                <span>🔄 ${run.run_attempt || 1} attempt(s)</span>
+                            </div>
+                        </div>
+                        <div class=\"run-actions\">
+                            <a href=\"${run.html_url}\" target=\"_blank\" class=\"btn btn-sm btn-secondary\">
+                                View Full Logs on GitHub
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            runsHtml += '</div>';
+            runsEl.innerHTML = runsHtml;
+        } else {
+            runsEl.innerHTML = '<div class=\"empty-state\"><p>No recent runs found for this workflow</p></div>';
+        }
+    } catch (error) {
+        console.error('Error loading workflow runs:', error);
+        runsEl.innerHTML = `<div class=\"error-state\"><p>❌ Error loading runs: ${error.message}</p></div>`;
+    }
+}
+
+function closeGitHubLogsModal() {
+    const modal = document.getElementById('github-logs-modal');
+    modal.style.display = 'none';
+}
+
+async function quickTriggerWorkflow(owner, repo, workflowId, buttonElement) {
+    const originalContent = buttonElement.innerHTML;
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = '⏳';
+    
+    try {
+        const response = await fetch('/api/github/trigger-workflow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                owner: owner,
+                repo: repo,
+                workflow_id: workflowId,
+                ref: 'main'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            buttonElement.innerHTML = '✓';
+            buttonElement.style.color = 'var(--success-color)';
+            setTimeout(() => {
+                buttonElement.innerHTML = originalContent;
+                buttonElement.disabled = false;
+                buttonElement.style.color = '';
+            }, 2000);
+        } else {
+            buttonElement.innerHTML = '❌';
+            buttonElement.style.color = 'var(--danger-color)';
+            setTimeout(() => {
+                buttonElement.innerHTML = originalContent;
+                buttonElement.disabled = false;
+                buttonElement.style.color = '';
+                alert(`Failed to trigger workflow: ${result.error}\n\nMake sure the workflow has 'workflow_dispatch' trigger configured.`);
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Error triggering workflow:', error);
+        buttonElement.innerHTML = '❌';
+        buttonElement.style.color = 'var(--danger-color)';
+        setTimeout(() => {
+            buttonElement.innerHTML = originalContent;
+            buttonElement.disabled = false;
+            buttonElement.style.color = '';
+        }, 2000);
+    }
+}
+
+async function triggerWorkflow(owner, repo, workflowId) {
+    const triggerBtn = document.getElementById('trigger-workflow-btn');
+    const statusDiv = document.getElementById('trigger-status');
+    const branchInput = document.getElementById('workflow-branch');
+    const branch = branchInput.value.trim() || 'main';
+    
+    // Disable button and show loading
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = '⏳ Triggering...';
+    statusDiv.innerHTML = '';
+    
+    try {
+        const response = await fetch('/api/github/trigger-workflow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                owner: owner,
+                repo: repo,
+                workflow_id: workflowId,
+                ref: branch
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            statusDiv.innerHTML = `
+                <div class="success-message">
+                    ✅ ${result.message}
+                    <br/>
+                    <small>Refresh the runs list in a few seconds to see the new run.</small>
+                </div>
+            `;
+            triggerBtn.innerHTML = '✓ Triggered';
+            
+            // Reload runs after 3 seconds
+            setTimeout(() => {
+                showWorkflowLogs(owner, repo, workflowId, 'Workflow', '#');
+            }, 3000);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="error-message">
+                    ❌ ${result.error}
+                    <br/>
+                    <small>Make sure the workflow has 'workflow_dispatch' trigger configured.</small>
+                </div>
+            `;
+            triggerBtn.disabled = false;
+            triggerBtn.innerHTML = '▶️ Trigger Workflow';
+        }
+    } catch (error) {
+        console.error('Error triggering workflow:', error);
+        statusDiv.innerHTML = `
+            <div class="error-message">
+                ❌ Error: ${error.message}
+            </div>
+        `;
+        triggerBtn.disabled = false;
+        triggerBtn.innerHTML = '▶️ Trigger Workflow';
+    }
+}
+
+function calculateDuration(startTime, endTime) {
+    try {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const diffMs = end - start;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffSecs = Math.floor((diffMs % 60000) / 1000);
+        
+        if (diffMins > 0) {
+            return `${diffMins}m ${diffSecs}s`;
+        } else {
+            return `${diffSecs}s`;
+        }
+    } catch (e) {
+        return 'N/A';
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('github-logs-modal');
+    if (event.target === modal) {
+        closeGitHubLogsModal();
+    }
+}

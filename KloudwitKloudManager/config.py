@@ -32,6 +32,11 @@ class Config:
     GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
     GCP_SERVICE_ACCOUNT_FILE = os.getenv('GCP_SERVICE_ACCOUNT_FILE')
     
+    # GitHub Configuration
+    GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+    GITHUB_ORGANIZATION = os.getenv('GITHUB_ORGANIZATION')
+    GITHUB_USERNAME = os.getenv('GITHUB_USERNAME')
+    
     # Application Settings
     REFRESH_INTERVAL = int(os.getenv('REFRESH_INTERVAL', 300))
     MAX_WORKERS = int(os.getenv('MAX_WORKERS', 5))

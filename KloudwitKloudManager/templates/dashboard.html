@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>kloudmanager - Multi-Cloud Management Dashboard | Kloudwit Solutions</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo-icon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=4.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,8 +14,12 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <h1>☁️ kloudmanager</h1>
-            <p>Kloudwit Solutions</p>
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/logo-icon.svg') }}" alt="kloudmanager" class="logo-icon">
+                <div class="logo-text">
+                    <h1>kloudmanager</h1>
+                </div>
+            </div>
         </div>
         <nav class="sidebar-nav">
             <a href="#" class="nav-item active" data-view="dashboard">
@@ -24,6 +29,10 @@
             <a href="#" class="nav-item" data-view="resources">
                 <span class="nav-icon">💻</span>
                 <span class="nav-text">Resources</span>
+            </a>
+            <a href="#" class="nav-item" data-view="github">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-text">GitHub Actions</span>
             </a>
             <a href="#" class="nav-item" data-view="providers">
                 <span class="nav-icon">☁️</span>
@@ -192,6 +201,22 @@
 
                 <div class="dashboard-card card-full">
                     <div class="card-header">
+                        <h3>⚡ GitHub Actions Status</h3>
+                        <button class="btn btn-sm btn-primary" onclick="loadGitHubActions()" style="margin-left: auto;">
+                            <span id="github-refresh-icon">🔄</span> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="github-actions-dashboard" class="github-dashboard">
+                            <div class="github-empty-state">
+                                <p>Click "Discover Actions" in the Providers section to load GitHub Actions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card card-full">
+                    <div class="card-header">
                         <h3>Recent Alerts</h3>
                     </div>
                     <div class="card-body">
@@ -269,6 +294,46 @@
             </div>
         </div>
 
+        <!-- GitHub Actions View -->
+        <div id="github-view" class="view-content">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>⚡ GitHub Actions Management</h3>
+                    <div style="display: flex; gap: 10px; margin-left: auto;">
+                        <button class="btn btn-primary" onclick="testConnection('GitHub')">Test Connection</button>
+                        <button class="btn btn-success" onclick="discoverGitHubResources()">Discover Actions</button>
+                        <button class="btn btn-info" onclick="loadGitHubUsageStats()">View Statistics</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="github-main-status" class="connection-status"></div>
+                    <div id="github-usage-stats" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <div class="dashboard-card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h3>📦 All GitHub Actions & Workflows</h3>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
+                        <label for="repo-filter" style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Filter:</label>
+                        <select id="repo-filter" class="repo-filter-select" onchange="filterGitHubActionsByRepo()">
+                            <option value="all">🔍 All Repositories</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" onclick="loadGitHubActionsView()">
+                            <span id="github-view-refresh-icon">🔄</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="github-actions-main-view" class="github-dashboard">
+                        <div class="github-empty-state">
+                            <p>Click "Discover Actions" above to load GitHub Actions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Providers View -->
         <div id="providers-view" class="view-content">
             <div class="dashboard-grid">
@@ -297,6 +362,17 @@
                     <div class="card-body">
                         <button class="btn btn-primary" onclick="testConnection('GCP')">Test Connection</button>
                         <div id="gcp-status" class="connection-status"></div>
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>⚡ GitHub Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary" onclick="testConnection('GitHub')">Test Connection</button>
+                        <button class="btn btn-success" onclick="discoverGitHubResources()" style="margin-left: 10px;">Discover Actions</button>
+                        <div id="github-status" class="connection-status"></div>
+                        <div id="github-stats" style="margin-top: 15px;"></div>
                     </div>
                 </div>
             </div>
@@ -450,6 +526,22 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Action Logs Modal -->
+    <div id="github-logs-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="modal-workflow-title">⚡ Workflow Runs</h3>
+                <button class="modal-close" onclick="closeGitHubLogsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-workflow-info" class="workflow-info-section"></div>
+                <div id="modal-runs-list" class="runs-list-section">
+                    <div class="loading">Loading workflow runs...</div>
                 </div>
             </div>
         </div>
