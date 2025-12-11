@@ -268,14 +268,24 @@ function displayPage() {
     pageResources.forEach(resource => {
         const row = document.createElement('tr');
         const statusClass = resource.status.toLowerCase().replace(/[^a-z]/g, '-');
+        
+        // Add refresh button for Azure VMs
+        const isAzureVM = resource.resource_type === 'VM' && resource.provider === 'Azure';
+        const azureResourceId = resource.resource_id || '';  // Full Azure resource ID
+        
         row.innerHTML = `
             <td>${resource.name}</td>
             <td>${resource.resource_type}</td>
             <td>${resource.provider}</td>
             <td>${resource.region}</td>
-            <td><span class="status-badge status-${statusClass}">${resource.status}</span></td>
+            <td>
+                <span class="status-badge status-${statusClass}" id="status-${resource.id}">${resource.status}</span>
+                ${isAzureVM ? `<button class="btn-refresh" onclick='refreshVMStatus(${JSON.stringify(azureResourceId)}, ${resource.id}, this)' title="Refresh Status">🔄</button>` : ''}
+            </td>
             <td>${resource.size}</td>
-            <td>${new Date(resource.last_updated).toLocaleString()}</td>
+            <td>
+                <span id="updated-${resource.id}">${resource.last_updated ? new Date(resource.last_updated).toLocaleString() : 'N/A'}</span>
+            </td>
         `;
         tbody.appendChild(row);
     });
@@ -1300,5 +1310,97 @@ window.onclick = function(event) {
     const modal = document.getElementById('github-logs-modal');
     if (event.target === modal) {
         closeGitHubLogsModal();
+    }
+}
+
+// Refresh VM status
+async function refreshVMStatus(azureResourceId, dbResourceId, button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '⏳';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/resources/refresh-vm-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ resource_id: azureResourceId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update status badge
+            const statusBadge = document.getElementById(`status-${dbResourceId}`);
+            if (statusBadge) {
+                const statusClass = result.resource.status.toLowerCase().replace(/[^a-z]/g, '-');
+                statusBadge.className = `status-badge status-${statusClass}`;
+                statusBadge.textContent = result.resource.status;
+            }
+            
+            // Update last updated time
+            const updatedSpan = document.getElementById(`updated-${dbResourceId}`);
+            if (updatedSpan) {
+                updatedSpan.textContent = new Date(result.resource.last_updated).toLocaleString();
+            }
+            
+            // Show success feedback
+            button.innerHTML = '✓';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        } else {
+            throw new Error(result.error || 'Failed to refresh status');
+        }
+    } catch (error) {
+        console.error('Error refreshing VM status:', error);
+        button.innerHTML = '✗';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+        alert('Failed to refresh VM status: ' + error.message);
+    }
+}
+
+// Refresh all VMs status
+async function refreshAllVMs() {
+    const btn = document.getElementById('refresh-all-vms-btn');
+    if (!btn) return;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Refreshing...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/resources/refresh-all-vms', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            btn.innerHTML = `✓ Updated ${result.updated_count} VMs`;
+            
+            // Reload resources to show updated status
+            await loadResources();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 3000);
+        } else {
+            throw new Error(result.error || 'Failed to refresh VMs');
+        }
+    } catch (error) {
+        console.error('Error refreshing all VMs:', error);
+        btn.innerHTML = '✗ Failed';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 3000);
+        alert('Failed to refresh VMs: ' + error.message);
     }
 }

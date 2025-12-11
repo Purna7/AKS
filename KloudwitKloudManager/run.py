@@ -259,6 +259,7 @@ def get_resources():
             'success': True,
             'resources': [{
                 'id': r.id,
+                'resource_id': r.resource_id,  # Azure/AWS/GCP resource ID
                 'name': r.name,
                 'resource_type': r.resource_type,
                 'type': r.resource_type,
@@ -273,6 +274,115 @@ def get_resources():
         })
     except Exception as e:
         logger.error(f"Error getting resources: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/resources/refresh-vm-status', methods=['POST'])
+def refresh_vm_status():
+    """Refresh VM status from Azure in real-time"""
+    try:
+        from flask import request
+        
+        # Get resource ID from request
+        data = request.get_json()
+        resource_id = data.get('resource_id') if data else None
+        
+        if not resource_id:
+            return jsonify({'success': False, 'error': 'resource_id required'}), 400
+        
+        # Get the resource from database
+        resource = CloudResource.query.filter_by(resource_id=resource_id).first()
+        if not resource:
+            return jsonify({'success': False, 'error': 'Resource not found'}), 404
+        
+        # Get Azure provider
+        azure_provider = CloudProvider.query.filter_by(name='Azure', is_enabled=True).first()
+        if not azure_provider or not AZURE_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure not configured'}), 400
+        
+        # Get Azure credentials
+        creds = azure_provider.get_credentials()
+        azure_connector = AzureConnector(
+            subscription_id=creds.get('subscription_id'),
+            tenant_id=creds.get('tenant_id'),
+            client_id=creds.get('client_id'),
+            client_secret=creds.get('client_secret')
+        )
+        
+        # Get fresh VM data
+        from azure.mgmt.compute import ComputeManagementClient
+        compute_client = ComputeManagementClient(azure_connector.credential, azure_connector.subscription_id)
+        
+        # Extract resource group and VM name from resource_id
+        # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{vm}
+        parts = resource_id.split('/')
+        resource_group = parts[4]
+        vm_name = parts[-1]
+        
+        # Get instance view for current power state
+        instance_view = compute_client.virtual_machines.instance_view(resource_group, vm_name)
+        
+        power_state = 'unknown'
+        for status in instance_view.statuses:
+            if status.code.startswith('PowerState/'):
+                power_state = status.code.split('/')[-1]
+        
+        # Update resource in database
+        resource.status = power_state
+        resource.last_updated = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'resource': {
+                'id': resource.id,
+                'name': resource.name,
+                'status': resource.status,
+                'last_updated': resource.last_updated.isoformat()
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error refreshing VM status: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/resources/refresh-all-vms', methods=['POST'])
+def refresh_all_vms():
+    """Refresh status for all Azure VMs"""
+    try:
+        # Get Azure provider
+        azure_provider = CloudProvider.query.filter_by(name='Azure', is_enabled=True).first()
+        if not azure_provider or not AZURE_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure not configured'}), 400
+        
+        # Get Azure credentials
+        creds = azure_provider.get_credentials()
+        azure_connector = AzureConnector(
+            subscription_id=creds.get('subscription_id'),
+            tenant_id=creds.get('tenant_id'),
+            client_id=creds.get('client_id'),
+            client_secret=creds.get('client_secret')
+        )
+        
+        # Get all VMs from Azure with current status
+        fresh_vms = azure_connector.get_virtual_machines()
+        
+        # Update database
+        updated_count = 0
+        for vm_data in fresh_vms:
+            resource = CloudResource.query.filter_by(resource_id=vm_data['resource_id']).first()
+            if resource:
+                resource.status = vm_data['status']
+                resource.last_updated = datetime.utcnow()
+                updated_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'updated_count': updated_count,
+            'message': f'Updated status for {updated_count} VMs'
+        })
+    except Exception as e:
+        logger.error(f"Error refreshing all VMs: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/alerts')

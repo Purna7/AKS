@@ -233,6 +233,13 @@
             <div class="dashboard-card">
                 <div class="card-header">
                     <h3>All Cloud Resources</h3>
+                    <div class="header-actions">
+                        <button id="refresh-all-vms-btn" class="btn-action" onclick="refreshAllVMs()" title="Refresh all Azure VM statuses">
+                            🔄 Refresh All VMs
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
                     <div class="filter-buttons">
                         <button class="filter-btn active" data-type="all">All</button>
                         <button class="filter-btn" data-type="VM">VMs</button>
