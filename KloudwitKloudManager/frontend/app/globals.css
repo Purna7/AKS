@@ -8,14 +8,71 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background: #0a0e1a;
+  color: #e2e8f0;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Ant Design Customizations */
+.ant-layout {
+  background: #0a0e1a !important;
+}
+
+.ant-menu-dark {
+  background: transparent !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
+  border-radius: 0.5rem;
+}
+
+.ant-menu-dark .ant-menu-item {
+  margin: 4px 16px;
+  border-radius: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ant-menu-dark .ant-menu-item:hover {
+  background: #1e293b !important;
+  transform: translateX(4px);
+}
+
+.ant-card {
+  background: #141927 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 0.875rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+.ant-card-head {
+  background: linear-gradient(180deg, #141927 0%, rgba(14, 165, 233, 0.03) 100%) !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+.ant-breadcrumb-link {
+  color: #94a3b8;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
+  border: none !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  filter: brightness(1.05);
 }
 
 /* Custom scrollbar */
@@ -25,25 +82,14 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #0f1419;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #334155;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Dark theme support */
-[data-theme='dark'] {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-}
-
-[data-theme='light'] {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  background: #475569;
 }

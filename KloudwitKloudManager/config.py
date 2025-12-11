@@ -37,6 +37,11 @@ class Config:
     GITHUB_ORGANIZATION = os.getenv('GITHUB_ORGANIZATION')
     GITHUB_USERNAME = os.getenv('GITHUB_USERNAME')
     
+    # Azure DevOps Configuration
+    AZUREDEVOPS_ORGANIZATION = os.getenv('AZUREDEVOPS_ORGANIZATION')
+    AZUREDEVOPS_PAT = os.getenv('AZUREDEVOPS_PAT')
+    AZUREDEVOPS_PROJECT = os.getenv('AZUREDEVOPS_PROJECT')
+    
     # Application Settings
     REFRESH_INTERVAL = int(os.getenv('REFRESH_INTERVAL', 300))
     MAX_WORKERS = int(os.getenv('MAX_WORKERS', 5))

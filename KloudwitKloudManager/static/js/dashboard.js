@@ -95,6 +95,7 @@ function switchView(view) {
         'dashboard': { title: 'Multi-Cloud Dashboard', subtitle: 'Real-time overview of your cloud resources' },
         'resources': { title: 'Cloud Resources', subtitle: 'Manage all your cloud resources in one place' },
         'github': { title: 'GitHub Actions', subtitle: 'Monitor and manage your GitHub workflows and action runs' },
+        'azuredevops': { title: 'Azure DevOps Pipelines', subtitle: 'Monitor and manage your Azure DevOps pipelines and runs' },
         'providers': { title: 'Cloud Providers', subtitle: 'Configure and manage cloud provider connections' },
         'costs': { title: 'Cost Analysis', subtitle: 'Track and analyze your cloud spending for the last 30 days' },
         'compliance': { title: 'Compliance Status', subtitle: 'View non-compliant resources and policy violations' },
@@ -104,6 +105,9 @@ function switchView(view) {
     
     document.getElementById('page-title').textContent = titles[view].title;
     document.getElementById('page-subtitle').textContent = titles[view].subtitle;
+    
+    // Update breadcrumb
+    document.getElementById('breadcrumb-current').textContent = titles[view].title;
     
     // Load view-specific data
     switch (view) {
@@ -115,6 +119,9 @@ function switchView(view) {
             break;
         case 'github':
             loadGitHubActionsView();
+            break;
+        case 'azuredevops':
+            loadADOPipelinesView();
             break;
         case 'providers':
             loadProviders();
@@ -1403,4 +1410,347 @@ async function refreshAllVMs() {
         }, 3000);
         alert('Failed to refresh VMs: ' + error.message);
     }
+}
+
+// ==================== Azure DevOps Functions ====================
+
+// Azure DevOps Pipeline Discovery
+async function discoverADOPipelines() {
+    const statusDiv = document.getElementById('azuredevops-status') || document.getElementById('ado-discover-status');
+    const statsDiv = document.getElementById('azuredevops-stats');
+    
+    try {
+        if (statusDiv) {
+            statusDiv.innerHTML = '<div class="loading">🔄 Discovering Azure DevOps Pipelines...</div>';
+        }
+        if (statsDiv) {
+            statsDiv.innerHTML = '';
+        }
+        
+        const response = await fetch('/api/azuredevops/discover', {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            if (statusDiv) {
+                statusDiv.innerHTML = `<div class="success">✅ ${result.message}</div>`;
+            }
+            
+            // Load usage stats if on Azure DevOps view
+            if (currentView === 'azuredevops') {
+                await loadADOUsageStats();
+                await loadADOPipelinesView();
+            } else {
+                // Load usage stats for providers view
+                await loadADOStats();
+            }
+            
+            // Refresh dashboard if that's current view
+            if (currentView === 'dashboard') {
+                loadDashboardData();
+            }
+        } else {
+            if (statusDiv) {
+                statusDiv.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+            }
+        }
+    } catch (error) {
+        console.error('Error discovering Azure DevOps pipelines:', error);
+        if (statusDiv) {
+            statusDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+    }
+}
+
+// Load Azure DevOps stats for providers view
+async function loadADOStats() {
+    const statsDiv = document.getElementById('azuredevops-stats');
+    if (!statsDiv) return;
+    
+    try {
+        const response = await fetch('/api/azuredevops/usage-stats?days=30');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.stats;
+            const successRate = stats.total_runs > 0 
+                ? ((stats.successful_runs / stats.total_runs) * 100).toFixed(1)
+                : 0;
+            
+            statsDiv.innerHTML = `
+                <div class="github-stats">
+                    <h4>📊 Usage Stats (Last 30 Days)</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Pipelines:</span>
+                            <span class="stat-value">${stats.total_pipelines}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Runs:</span>
+                            <span class="stat-value">${stats.total_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Successful:</span>
+                            <span class="stat-value success">${stats.successful_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Failed:</span>
+                            <span class="stat-value error">${stats.failed_runs}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Success Rate:</span>
+                            <span class="stat-value">${successRate}%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Duration:</span>
+                            <span class="stat-value">${Math.round(stats.total_duration_minutes)} min</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading Azure DevOps stats:', error);
+    }
+}
+
+// Load Azure DevOps usage stats for main view
+async function loadADOUsageStats() {
+    try {
+        const response = await fetch('/api/azuredevops/usage-stats?days=30');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.stats;
+            const successRate = stats.total_runs > 0 
+                ? ((stats.successful_runs / stats.total_runs) * 100).toFixed(1)
+                : 0;
+            
+            // Update stat displays
+            document.getElementById('ado-total-pipelines').textContent = stats.total_pipelines;
+            document.getElementById('ado-total-runs').textContent = stats.total_runs;
+            document.getElementById('ado-success-rate').textContent = `${successRate}%`;
+        }
+    } catch (error) {
+        console.error('Error loading Azure DevOps usage stats:', error);
+    }
+}
+
+// Store all ADO pipelines for filtering
+let allADOPipelines = [];
+
+// Load Azure DevOps pipelines view
+async function loadADOPipelinesView() {
+    const mainViewDiv = document.getElementById('ado-pipelines-main-view');
+    const projectFilter = document.getElementById('ado-project-filter');
+    
+    try {
+        // Show loading state
+        mainViewDiv.innerHTML = '<div class="loading">Loading Azure DevOps Pipelines...</div>';
+        
+        // Fetch ADO Pipeline resources
+        const response = await fetch('/api/resources?type=ADO Pipeline');
+        const result = await response.json();
+        
+        if (result.success && result.resources.length > 0) {
+            allADOPipelines = result.resources;
+            
+            // Populate project filter
+            populateADOProjectFilter(result.resources);
+            
+            displayADOPipelinesGrid(result.resources, mainViewDiv);
+        } else {
+            allADOPipelines = [];
+            mainViewDiv.innerHTML = `
+                <div class="github-empty-state">
+                    <p>No Azure DevOps Pipelines found</p>
+                    <p>Click <strong>Discover Pipelines</strong> above to fetch your pipelines</p>
+                </div>
+            `;
+            // Reset filter
+            if (projectFilter) {
+                projectFilter.innerHTML = '<option value="">All Projects</option>';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading Azure DevOps pipelines view:', error);
+        mainViewDiv.innerHTML = `
+            <div class="error-state">
+                <p>❌ Error loading Azure DevOps Pipelines: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Populate project filter dropdown
+function populateADOProjectFilter(pipelines) {
+    const projectFilter = document.getElementById('ado-project-filter');
+    if (!projectFilter) return;
+    
+    // Get unique projects
+    const projects = [...new Set(pipelines.map(p => p.tags?.project).filter(Boolean))];
+    
+    projectFilter.innerHTML = '<option value="">All Projects</option>';
+    projects.sort().forEach(project => {
+        const option = document.createElement('option');
+        option.value = project;
+        option.textContent = project;
+        projectFilter.appendChild(option);
+    });
+}
+
+// Filter ADO pipelines by project
+function filterADOPipelinesByProject() {
+    const projectFilter = document.getElementById('ado-project-filter');
+    const mainViewDiv = document.getElementById('ado-pipelines-main-view');
+    
+    if (!projectFilter || !mainViewDiv) return;
+    
+    const selectedProject = projectFilter.value;
+    
+    let filteredPipelines = allADOPipelines;
+    if (selectedProject) {
+        filteredPipelines = allADOPipelines.filter(p => p.tags?.project === selectedProject);
+    }
+    
+    displayADOPipelinesGrid(filteredPipelines, mainViewDiv);
+}
+
+// Display ADO pipelines in grid
+function displayADOPipelinesGrid(pipelines, container) {
+    if (!pipelines || pipelines.length === 0) {
+        container.innerHTML = `
+            <div class="github-empty-state">
+                <p>No pipelines match the selected filters</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Group by project
+    const pipelinesByProject = {};
+    pipelines.forEach(pipeline => {
+        const project = pipeline.tags?.project || 'Unknown';
+        if (!pipelinesByProject[project]) {
+            pipelinesByProject[project] = [];
+        }
+        pipelinesByProject[project].push(pipeline);
+    });
+    
+    let html = '<div class="github-actions-grid">';
+    
+    Object.keys(pipelinesByProject).sort().forEach(project => {
+        html += `
+            <div class="repo-section">
+                <h4 class="repo-name">📁 ${project}</h4>
+                <div class="workflows-grid">
+        `;
+        
+        pipelinesByProject[project].forEach(pipeline => {
+            const metadata = pipeline.resource_metadata || {};
+            const statusClass = getStatusClass(pipeline.status);
+            const lastRun = metadata.last_run ? new Date(metadata.last_run).toLocaleString() : 'Never';
+            
+            html += `
+                <div class="workflow-card">
+                    <div class="workflow-header">
+                        <h5>${pipeline.tags?.pipeline_name || pipeline.name}</h5>
+                        <span class="status-badge ${statusClass}">${pipeline.status}</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Pipeline ID:</span>
+                            <span class="meta-value">${pipeline.tags?.pipeline_id || 'N/A'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Folder:</span>
+                            <span class="meta-value">${pipeline.tags?.folder || '/'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Total Runs (7d):</span>
+                            <span class="meta-value">${metadata.total_runs || 0}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Success:</span>
+                            <span class="meta-value success">${metadata.success_runs || 0}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Failed:</span>
+                            <span class="meta-value error">${metadata.failure_runs || 0}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">In Progress:</span>
+                            <span class="meta-value">${metadata.in_progress_runs || 0}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Last Run:</span>
+                            <span class="meta-value">${lastRun}</span>
+                        </div>
+                    </div>
+                    <div class="workflow-actions">
+                        ${metadata.pipeline_url ? `<a href="${metadata.pipeline_url}" target="_blank" class="btn btn-sm btn-secondary">View in Azure DevOps</a>` : ''}
+                        <button class="btn btn-sm btn-primary" onclick="triggerADOPipeline('${pipeline.tags?.project}', ${pipeline.tags?.pipeline_id}, '${pipeline.tags?.pipeline_name}')">
+                            ▶️ Trigger Run
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Trigger Azure DevOps pipeline
+async function triggerADOPipeline(project, pipelineId, pipelineName) {
+    if (!confirm(`Trigger pipeline "${pipelineName}" in project "${project}"?`)) {
+        return;
+    }
+    
+    const branch = prompt('Enter branch name:', 'main');
+    if (!branch) return;
+    
+    try {
+        const response = await fetch('/api/azuredevops/trigger-pipeline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                project: project,
+                pipeline_id: pipelineId,
+                branch: branch
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ ${result.message}`);
+            // Reload pipelines to get updated status
+            setTimeout(() => loadADOPipelinesView(), 2000);
+        } else {
+            alert(`❌ Error: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Error triggering pipeline:', error);
+        alert(`❌ Error: ${error.message}`);
+    }
+}
+
+// Helper function to get status class
+function getStatusClass(status) {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower === 'succeeded' || statusLower === 'success') return 'status-success';
+    if (statusLower === 'failed' || statusLower === 'failure') return 'status-failed';
+    if (statusLower === 'canceled' || statusLower === 'cancelled') return 'status-cancelled';
+    if (statusLower === 'inprogress' || statusLower === 'running') return 'status-running';
+    return 'status-unknown';
 }

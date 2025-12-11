@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>kloudmanager - Multi-Cloud Management Dashboard | Kloudwit Solutions</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo-icon.svg') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=4.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v={{ cache_buster }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -34,6 +34,10 @@
                 <span class="nav-icon">⚡</span>
                 <span class="nav-text">GitHub Actions</span>
             </a>
+            <a href="#" class="nav-item" data-view="azuredevops">
+                <span class="nav-icon">🔷</span>
+                <span class="nav-text">ADOPipelines</span>
+            </a>
             <a href="#" class="nav-item" data-view="providers">
                 <span class="nav-icon">☁️</span>
                 <span class="nav-text">Providers</span>
@@ -59,6 +63,24 @@
 
     <!-- Main Content -->
     <div class="main-content">
+        <!-- Enterprise Top Navigation -->
+        <div class="top-nav">
+            <div class="breadcrumbs">
+                <span class="breadcrumb-home">🏠 Home</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current" id="breadcrumb-current">Dashboard</span>
+            </div>
+            <div class="top-nav-actions">
+                <div class="sync-status">
+                    <span class="status-dot" id="sync-status-dot"></span>
+                    <span id="sync-status-text">Syncing...</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="refreshData()">
+                    <span id="refresh-icon">🔄</span> Refresh
+                </button>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="header">
             <div class="header-left">
@@ -66,13 +88,6 @@
                 <p id="page-subtitle">Real-time overview of your cloud resources</p>
             </div>
             <div class="header-right">
-                <button class="btn btn-secondary" onclick="refreshData()">
-                    <span id="refresh-icon">🔄</span> Refresh
-                </button>
-                <div class="sync-status">
-                    <span class="status-dot" id="sync-status-dot"></span>
-                    <span id="sync-status-text">Syncing...</span>
-                </div>
             </div>
         </header>
 
@@ -341,6 +356,56 @@
             </div>
         </div>
 
+        <!-- Azure DevOps Pipelines View -->
+        <div id="azuredevops-view" class="view-content">
+            <div class="dashboard-grid">
+                <div class="dashboard-card full-width">
+                    <div class="card-header">
+                        <h3>🔷 Azure DevOps Pipelines Management</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Total Pipelines</div>
+                                <div class="stat-value" id="ado-total-pipelines">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Total Runs (30d)</div>
+                                <div class="stat-value" id="ado-total-runs">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Success Rate</div>
+                                <div class="stat-value" id="ado-success-rate">0%</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="discoverADOPipelines()">🔍 Discover Pipelines</button>
+                        <div id="ado-discover-status" class="discovery-status"></div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card full-width">
+                    <div class="card-header">
+                        <h3>📦 All Azure DevOps Pipelines</h3>
+                        <div class="card-header-actions">
+                            <select id="ado-project-filter" class="repo-filter-select" onchange="filterADOPipelinesByProject()">
+                                <option value="">All Projects</option>
+                            </select>
+                            <button class="btn btn-sm btn-primary" onclick="loadADOPipelinesView()">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="ado-pipelines-main-view" class="github-dashboard">
+                            <div class="github-empty-state">
+                                <p>Click "Discover Pipelines" above to load Azure DevOps Pipelines</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Providers View -->
         <div id="providers-view" class="view-content">
             <div class="dashboard-grid">
@@ -380,6 +445,17 @@
                         <button class="btn btn-success" onclick="discoverGitHubResources()" style="margin-left: 10px;">Discover Actions</button>
                         <div id="github-status" class="connection-status"></div>
                         <div id="github-stats" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>🔷 Azure DevOps</h3>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary" onclick="testConnection('AzureDevOps')">Test Connection</button>
+                        <button class="btn btn-success" onclick="discoverADOPipelines()" style="margin-left: 10px;">Discover Pipelines</button>
+                        <div id="azuredevops-status" class="connection-status"></div>
+                        <div id="azuredevops-stats" style="margin-top: 15px;"></div>
                     </div>
                 </div>
             </div>
@@ -554,6 +630,6 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=4.0"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}?v={{ cache_buster }}"></script>
 </body>
 </html>

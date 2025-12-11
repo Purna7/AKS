@@ -43,6 +43,13 @@ try:
 except Exception as e:
     logger.warning(f"GitHub connector not available: {e}")
 
+AZUREDEVOPS_AVAILABLE = False
+try:
+    from cloud_connectors.azuredevops_connector import AzureDevOpsConnector
+    AZUREDEVOPS_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"Azure DevOps connector not available: {e}")
+
 app = Flask(__name__)
 app.config.from_object(config['development'])
 db.init_app(app)
@@ -79,7 +86,8 @@ def init_db():
             'AWS': 'AWS Cloud',
             'Azure': 'Azure Cloud',
             'GCP': 'GCP Cloud',
-            'GitHub': 'GitHub Actions'
+            'GitHub': 'GitHub Actions',
+            'AzureDevOps': 'Azure DevOps'
         }
         
         for provider_name, display_name in provider_configs.items():
@@ -97,14 +105,16 @@ def init_db():
 @app.route('/')
 def index():
     """Dashboard homepage"""
-    return render_template('dashboard.html')
+    import time
+    cache_buster = int(time.time())
+    return render_template('dashboard.html', cache_buster=cache_buster)
 
 @app.route('/api/dashboard/summary')
 def dashboard_summary():
     """Get dashboard summary statistics - optimized for speed"""
     try:
-        # Single query to get all resources at once, excluding GitHub Actions
-        all_resources = [r for r in CloudResource.query.all() if r.resource_type != 'GitHub Action']
+        # Single query to get all resources at once, excluding GitHub Actions and ADO Pipelines
+        all_resources = [r for r in CloudResource.query.all() if r.resource_type not in ['GitHub Action', 'ADO Pipeline']]
         total_resources = len(all_resources)
         
         total_providers = CloudProvider.query.filter_by(is_enabled=True).count()
@@ -299,13 +309,12 @@ def refresh_vm_status():
         if not azure_provider or not AZURE_AVAILABLE:
             return jsonify({'success': False, 'error': 'Azure not configured'}), 400
         
-        # Get Azure credentials
-        creds = azure_provider.get_credentials()
+        # Get Azure credentials from app config
         azure_connector = AzureConnector(
-            subscription_id=creds.get('subscription_id'),
-            tenant_id=creds.get('tenant_id'),
-            client_id=creds.get('client_id'),
-            client_secret=creds.get('client_secret')
+            app.config['AZURE_SUBSCRIPTION_ID'],
+            app.config['AZURE_TENANT_ID'],
+            app.config['AZURE_CLIENT_ID'],
+            app.config['AZURE_CLIENT_SECRET']
         )
         
         # Get fresh VM data
@@ -353,13 +362,12 @@ def refresh_all_vms():
         if not azure_provider or not AZURE_AVAILABLE:
             return jsonify({'success': False, 'error': 'Azure not configured'}), 400
         
-        # Get Azure credentials
-        creds = azure_provider.get_credentials()
+        # Get Azure credentials from app config
         azure_connector = AzureConnector(
-            subscription_id=creds.get('subscription_id'),
-            tenant_id=creds.get('tenant_id'),
-            client_id=creds.get('client_id'),
-            client_secret=creds.get('client_secret')
+            app.config['AZURE_SUBSCRIPTION_ID'],
+            app.config['AZURE_TENANT_ID'],
+            app.config['AZURE_CLIENT_ID'],
+            app.config['AZURE_CLIENT_SECRET']
         )
         
         # Get all VMs from Azure with current status
@@ -440,6 +448,12 @@ def test_connection(provider_name):
                 organization=app.config.get('GITHUB_ORGANIZATION'),
                 username=app.config.get('GITHUB_USERNAME')
             )
+        elif provider_name.upper() == 'AZUREDEVOPS' and AZUREDEVOPS_AVAILABLE:
+            connector = AzureDevOpsConnector(
+                organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+                personal_access_token=app.config['AZUREDEVOPS_PAT'],
+                project=app.config.get('AZUREDEVOPS_PROJECT')
+            )
         elif not AWS_AVAILABLE and provider_name.upper() == 'AWS':
             return jsonify({'success': False, 'error': 'AWS connector not available'}), 503
         elif not AZURE_AVAILABLE and provider_name.upper() == 'AZURE':
@@ -448,6 +462,8 @@ def test_connection(provider_name):
             return jsonify({'success': False, 'error': 'GCP connector not available'}), 503
         elif not GITHUB_AVAILABLE and provider_name.upper() == 'GITHUB':
             return jsonify({'success': False, 'error': 'GitHub connector not available'}), 503
+        elif not AZUREDEVOPS_AVAILABLE and provider_name.upper() == 'AZUREDEVOPS':
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
         else:
             return jsonify({'success': False, 'error': f'Unknown provider: {provider_name}'}), 400
         
@@ -790,6 +806,253 @@ def trigger_workflow():
     
     except Exception as e:
         logger.error(f"Error triggering workflow: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ==================== Azure DevOps API Routes ====================
+
+@app.route('/api/azuredevops/discover', methods=['POST'])
+def discover_azuredevops_resources():
+    """Discover Azure DevOps Pipelines"""
+    try:
+        if not AZUREDEVOPS_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
+        
+        if not app.config.get('AZUREDEVOPS_ORGANIZATION'):
+            return jsonify({'success': False, 'error': 'Azure DevOps organization not configured'}), 400
+        
+        if not app.config.get('AZUREDEVOPS_PAT'):
+            return jsonify({'success': False, 'error': 'Azure DevOps PAT not configured'}), 400
+        
+        ado_provider = CloudProvider.query.filter_by(name='AzureDevOps').first()
+        if not ado_provider:
+            # Create Azure DevOps provider if it doesn't exist
+            ado_provider = CloudProvider(
+                name='AzureDevOps',
+                display_name='Azure DevOps',
+                is_enabled=True,
+                sync_status='in_progress'
+            )
+            db.session.add(ado_provider)
+            db.session.commit()
+        
+        # Update sync status
+        ado_provider.sync_status = 'in_progress'
+        ado_provider.last_sync = datetime.utcnow()
+        db.session.commit()
+        
+        # Initialize connector
+        connector = AzureDevOpsConnector(
+            organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+            personal_access_token=app.config['AZUREDEVOPS_PAT'],
+            project=app.config.get('AZUREDEVOPS_PROJECT')
+        )
+        
+        # Discover resources
+        resources = connector.discover_resources()
+        
+        # Delete existing Azure DevOps resources
+        CloudResource.query.filter_by(provider_id=ado_provider.id).delete()
+        
+        # Save discovered resources
+        for resource_data in resources:
+            resource = CloudResource(
+                provider_id=ado_provider.id,
+                resource_id=resource_data['resource_id'],
+                resource_type=resource_data['resource_type'],
+                name=resource_data['name'],
+                region=resource_data['region'],
+                status=resource_data['status'],
+                size=resource_data['size'],
+                tags=resource_data.get('tags', {}),
+                resource_metadata=resource_data.get('metadata', {}),
+                discovered_at=datetime.utcnow(),
+                last_updated=datetime.utcnow()
+            )
+            db.session.add(resource)
+        
+        ado_provider.sync_status = 'success'
+        ado_provider.error_message = None
+        ado_provider.is_enabled = True
+        db.session.commit()
+        
+        logger.info(f"Discovered {len(resources)} Azure DevOps Pipelines")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Discovered {len(resources)} Azure DevOps Pipelines',
+            'count': len(resources),
+            'resources': resources
+        })
+    
+    except Exception as e:
+        logger.error(f"Error discovering Azure DevOps resources: {str(e)}")
+        if 'ado_provider' in locals():
+            ado_provider.sync_status = 'failed'
+            ado_provider.error_message = str(e)
+            db.session.commit()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/azuredevops/usage-stats')
+def get_azuredevops_usage_stats():
+    """Get Azure DevOps pipeline usage statistics"""
+    try:
+        if not AZUREDEVOPS_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
+        
+        if not app.config.get('AZUREDEVOPS_ORGANIZATION') or not app.config.get('AZUREDEVOPS_PAT'):
+            return jsonify({'success': False, 'error': 'Azure DevOps not configured'}), 400
+        
+        from flask import request
+        days = int(request.args.get('days', 30))
+        
+        # Initialize connector
+        connector = AzureDevOpsConnector(
+            organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+            personal_access_token=app.config['AZUREDEVOPS_PAT'],
+            project=app.config.get('AZUREDEVOPS_PROJECT')
+        )
+        
+        # Get usage stats
+        stats = connector.get_pipeline_usage_stats(days=days)
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting Azure DevOps usage stats: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/azuredevops/projects')
+def get_azuredevops_projects():
+    """Get all Azure DevOps projects"""
+    try:
+        if not AZUREDEVOPS_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
+        
+        if not app.config.get('AZUREDEVOPS_ORGANIZATION') or not app.config.get('AZUREDEVOPS_PAT'):
+            return jsonify({'success': False, 'error': 'Azure DevOps not configured'}), 400
+        
+        connector = AzureDevOpsConnector(
+            organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+            personal_access_token=app.config['AZUREDEVOPS_PAT'],
+            project=app.config.get('AZUREDEVOPS_PROJECT')
+        )
+        
+        projects = connector.get_projects()
+        
+        return jsonify({
+            'success': True,
+            'projects': projects
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting Azure DevOps projects: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/azuredevops/pipelines/<project>')
+def get_azuredevops_pipelines(project):
+    """Get all pipelines for a project"""
+    try:
+        if not AZUREDEVOPS_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
+        
+        if not app.config.get('AZUREDEVOPS_ORGANIZATION') or not app.config.get('AZUREDEVOPS_PAT'):
+            return jsonify({'success': False, 'error': 'Azure DevOps not configured'}), 400
+        
+        connector = AzureDevOpsConnector(
+            organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+            personal_access_token=app.config['AZUREDEVOPS_PAT'],
+            project=app.config.get('AZUREDEVOPS_PROJECT')
+        )
+        
+        pipelines = connector.get_pipelines(project)
+        
+        return jsonify({
+            'success': True,
+            'pipelines': pipelines
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting Azure DevOps pipelines: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/azuredevops/pipeline-runs/<project>/<int:pipeline_id>')
+def get_azuredevops_pipeline_runs(project, pipeline_id):
+    """Get pipeline runs for a specific pipeline"""
+    try:
+        if not AZUREDEVOPS_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
+        
+        if not app.config.get('AZUREDEVOPS_ORGANIZATION') or not app.config.get('AZUREDEVOPS_PAT'):
+            return jsonify({'success': False, 'error': 'Azure DevOps not configured'}), 400
+        
+        from flask import request
+        days = int(request.args.get('days', 7))
+        
+        connector = AzureDevOpsConnector(
+            organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+            personal_access_token=app.config['AZUREDEVOPS_PAT'],
+            project=app.config.get('AZUREDEVOPS_PROJECT')
+        )
+        
+        runs = connector.get_pipeline_runs(project, pipeline_id, days)
+        
+        return jsonify({
+            'success': True,
+            'runs': runs
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting Azure DevOps pipeline runs: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/azuredevops/trigger-pipeline', methods=['POST'])
+def trigger_azuredevops_pipeline():
+    """Trigger an Azure DevOps pipeline"""
+    try:
+        if not AZUREDEVOPS_AVAILABLE:
+            return jsonify({'success': False, 'error': 'Azure DevOps connector not available'}), 503
+        
+        if not app.config.get('AZUREDEVOPS_ORGANIZATION') or not app.config.get('AZUREDEVOPS_PAT'):
+            return jsonify({'success': False, 'error': 'Azure DevOps not configured'}), 400
+        
+        from flask import request
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        project = data.get('project')
+        pipeline_id = data.get('pipeline_id')
+        branch = data.get('branch', 'main')
+        variables = data.get('variables')
+        
+        if not all([project, pipeline_id]):
+            return jsonify({'success': False, 'error': 'Missing required fields: project, pipeline_id'}), 400
+        
+        connector = AzureDevOpsConnector(
+            organization=app.config['AZUREDEVOPS_ORGANIZATION'],
+            personal_access_token=app.config['AZUREDEVOPS_PAT'],
+            project=app.config.get('AZUREDEVOPS_PROJECT')
+        )
+        
+        success, message = connector.trigger_pipeline(project, pipeline_id, branch, variables)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': message
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': message
+            }), 400
+    
+    except Exception as e:
+        logger.error(f"Error triggering Azure DevOps pipeline: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
